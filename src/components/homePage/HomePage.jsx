@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -12,6 +13,8 @@ function HomePage() {
 
   const handleShowModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
+
+  const navigate = useNavigate();
 
   const handleCreateTournament = () => {
     const newTournament = {
@@ -31,7 +34,16 @@ function HomePage() {
     const updatedTournaments = tournaments.map((tournament, index) =>
       index === indexToRename ? { ...tournament, name: newName } : tournament
     );
+    //console.log("index Data", updatedTournaments);
     setTournaments(updatedTournaments);
+  };
+
+  const handleStartTournament = (index, name) => {
+    //e.preventDefault();
+    console.log("index test", index, name);
+		const TournamentIndexTransfer = { type: "INDEX_TO_SELECTED", payload: index, name };
+
+		navigate(`/selected/${name}`, { state: TournamentIndexTransfer });
   };
 
   return (
@@ -58,6 +70,7 @@ function HomePage() {
                 tournaments={tournaments} 
                 onDeleteTournament={handleDeleteTournament} 
                 onRenameTournament={handleRenameTournament} 
+                onStartTournament={handleStartTournament} 
               />
             </Card.Body>
           </Card>
@@ -71,7 +84,7 @@ function HomePage() {
         <Modal.Body>
           <Form>
             <Form.Group controlId="newTournamentName">
-              <Form.Label>Tournament Name</Form.Label>
+              <Form.Label>Tournament Name:</Form.Label>
               <Form.Control
                 type="text"
                 value={newTournamentName}

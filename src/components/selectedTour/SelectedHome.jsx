@@ -1,10 +1,36 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 
 function HomePage() {
+	const [tournamentInfo, setTournamentInfo] = useState({
+		name: "",
+		dateCreated: "",
+		index: "",
+	});
+
 	const navigate = useNavigate();
+
+	const { state } = useLocation();
+
+	useEffect(() => {
+		console.log("Received state:", state);
+		if (state?.type === "INDEX_TO_SELECTED") {
+			const recievedIndex = state;
+
+			setTournamentInfo((prevState) => {
+				const updateTournament = { ...prevState };
+				updateTournament.name = recievedIndex.name;
+				updateTournament.index = recievedIndex.payload;
+			
+				console.log("New state to be set:", updateTournament);
+				return updateTournament;
+			});
+
+		}
+	}, [state, tournamentInfo.name]);
 
 	const onAddFriendClicked = () => {
 		navigate("/Friends/New");
@@ -32,7 +58,7 @@ function HomePage() {
 					<Card border="secondary" className="shadow">
 					<Card.Header>
 							insert logo here
-							<Card.Title className="mt-2">Selected Tournament</Card.Title>
+							<Card.Title className="mt-2">{tournamentInfo.name}</Card.Title>
 						</Card.Header>
 						<Card.Body>
 							<Card.Subtitle className="mb-2 text-muted">

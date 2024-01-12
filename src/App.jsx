@@ -27,7 +27,7 @@ function App() {
 						<Routes>
 							<Route path="/" element={<HomePage />}></Route>
 							<Route path="/login" element={<Login />}></Route>
-							<Route path="/selected" element={<SelectedHome />}></Route>
+							<Route path="/selected/:tournmentName" element={<SelectedHome />}></Route>
 							<Route path="/selected/createMatch" element={<CreateMatch />}></Route>
 							<Route path="/selected/generate" element={<GenerateTeam />}></Route>
 							<Route path="/submitScores" element={<SubmitScores />}></Route>
