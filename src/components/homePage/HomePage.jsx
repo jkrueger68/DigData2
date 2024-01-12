@@ -34,13 +34,10 @@ function HomePage() {
     const updatedTournaments = tournaments.map((tournament, index) =>
       index === indexToRename ? { ...tournament, name: newName } : tournament
     );
-    //console.log("index Data", updatedTournaments);
     setTournaments(updatedTournaments);
   };
 
   const handleStartTournament = (index, name) => {
-    //e.preventDefault();
-    console.log("index test", index, name);
 		const TournamentIndexTransfer = { type: "INDEX_TO_SELECTED", payload: index, name };
 
 		navigate(`/selected/${name}`, { state: TournamentIndexTransfer });
