@@ -9,8 +9,6 @@ import PlayersArray from "../hardCodedData/PlayersArray";
 
 function SelectedHome() {
 	const playersArr = PlayersArray();
-	console.log("Players Array:", playersArr);
-
 	const [showModal, setShowModal] = useState(false);
 	const handleShowModal = () => setShowModal(true);
 	const handleCloseModal = () => setShowModal(false);
@@ -27,18 +25,16 @@ function SelectedHome() {
 	const { state } = useLocation();
 
 	useEffect(() => {
-		console.log("Received state:", state);
 		if (state?.type === "INDEX_TO_SELECTED") {
-			const recievedIndex = state;
-
-			setTournamentInfo((prevState) => {
-				const updateTournament = { ...prevState };
-				updateTournament.name = recievedIndex.name;
-				updateTournament.index = recievedIndex.payload;
-				return updateTournament;
-			});
+			setTournamentInfo((prevState) => ({
+				...prevState,
+				name: state.name,
+				index: state.payload,
+			}));
 		}
+	}, [state]);
 
+	useEffect(() => {
 		const playerOrder = playersArr.sort((a, b) => {
 			if (a.lastName.toLowerCase() < b.lastName.toLowerCase()) return -1;
 			if (a.lastName.toLowerCase() > b.lastName.toLowerCase()) return 1;
@@ -48,16 +44,15 @@ function SelectedHome() {
 			return 0;
 		});
 
-		setTournamentInfo((prevState) => {
-			const player = { ...prevState };
-			player.players= playerOrder;
-			return player;
-		});
+		setTournamentInfo((prevState) => ({
+			...prevState,
+			players: playerOrder,
+		}));
 
-		console.log("end of useEffect state:", tournamentInfo);
-	}, [state]);
+		console.log("Updated manageList:", manageList);
+	}, [manageList]);
 
-	const togglePlayerPresent = (id) => {
+	const togglePlayerPresent = (id) => { 
 		setTournamentInfo((prevState) => {
 			const updatedPlayers = prevState.players.map((player) =>
 				player.id === id
@@ -76,21 +71,21 @@ function SelectedHome() {
 		navigate("/managePlayers");
 	};
 	const onViewScoresClicked = () => {
-		navigate("/Friends/New");
+		navigate("/Friends/New"); // change location when ready
 	};
 	const onEditMatchClicked = () => {
-		navigate("/Friends/New");
+		navigate("/Friends/New"); // change location when ready
 	};
-	const handleSavedPlayers = () => {
-		const playersWithYes = tournamentInfo.players.filter(player => player.present === "yes");
-			console.log("Players with yes:", playersWithYes);
+	const onSubmitPlayersClicked = () => {
+		const playersWithYes = tournamentInfo.players.filter(
+			(player) => player.present === "yes"
+		);
+		console.log("Players with yes:", playersWithYes);
 
-			setManageList((prevState) => {
-			const manage = { ...prevState };
-			manage.playersInTour= playersWithYes;
-			console.log("Players with yes in manageList:", manageList);
-			return manage;
-		});
+		setManageList(prevState => ({
+			...prevState,
+			playersInTour: playersWithYes
+		}));
 		handleCloseModal();
 	};
 
@@ -167,7 +162,7 @@ function SelectedHome() {
 							<Button variant="danger" onClick={handleCloseModal}>
 								Close
 							</Button>
-							<Button variant="primary" onClick={handleSavedPlayers}>
+							<Button variant="primary" onClick={onSubmitPlayersClicked}>
 								Submit Players
 							</Button>
 						</Modal.Footer>
