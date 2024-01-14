@@ -17,8 +17,8 @@ function SelectedHome() {
 		index: "",
 		players: [],
 	});
-	const [manageList, setManageList] = useState({
-		playersInTour: [],
+	const [playersList, setPlayersList] = useState({
+		allPlayers: [],
 	});
 
 	const navigate = useNavigate();
@@ -44,23 +44,23 @@ function SelectedHome() {
 			return 0;
 		});
 
-		setTournamentInfo((prevState) => ({
+		setPlayersList((prevState) => ({
 			...prevState,
-			players: playerOrder,
+			allPlayers: playerOrder,
 		}));
 
-		console.log("Updated manageList:", manageList);
-	}, [manageList]);
+		console.log("Updated tournamentInfo:", tournamentInfo);
+	}, [tournamentInfo]);
 
 	const togglePlayerPresent = (id) => { 
-		setTournamentInfo((prevState) => {
-			const updatedPlayers = prevState.players.map((player) =>
+		setPlayersList((prevState) => {
+			const updatedPlayers = prevState.allPlayers.map((player) =>
 				player.id === id
 					? { ...player, present: player.present === "yes" ? "no" : "yes" }
 					: player
 			);
 			console.log("New players state to be set:", updatedPlayers);
-			return { ...prevState, players: updatedPlayers };
+			return { ...prevState, allPlayers: updatedPlayers };
 		});
 	};
 
@@ -68,8 +68,19 @@ function SelectedHome() {
 		navigate("/selected/createMatch");
 	};
 	const onManagePlayersClicked = () => {
-		navigate("/managePlayers");
+		const index = tournamentInfo.index;
+		const name = tournamentInfo.name;
+	
+		const TournamentIndexTransfer = {
+			type: "INDEX_TO_MANAGE_PLAYERS",
+			payload: index,
+			tournamentName: name,
+		};
+	
+		navigate(`/managePlayers/${name}`, { state: TournamentIndexTransfer });
 	};
+	
+	
 	const onViewScoresClicked = () => {
 		navigate("/Friends/New"); // change location when ready
 	};
@@ -77,14 +88,14 @@ function SelectedHome() {
 		navigate("/Friends/New"); // change location when ready
 	};
 	const onSubmitPlayersClicked = () => {
-		const playersWithYes = tournamentInfo.players.filter(
+		const playersWithYes = playersList.allPlayers.filter(
 			(player) => player.present === "yes"
 		);
 		console.log("Players with yes:", playersWithYes);
 
-		setManageList(prevState => ({
+		setTournamentInfo(prevState => ({
 			...prevState,
-			playersInTour: playersWithYes
+			players: playersWithYes
 		}));
 		handleCloseModal();
 	};
@@ -119,12 +130,7 @@ function SelectedHome() {
 							</div>
 							<br />
 							<div className="col">
-								<Button
-									onClick={onManagePlayersClicked}
-									variant="primary shadow mt-2"
-								>
-									Manage Players
-								</Button>
+							<Button onClick={() => onManagePlayersClicked()}>Manage Players</Button>
 							</div>
 							<br />
 							<div className="col">
