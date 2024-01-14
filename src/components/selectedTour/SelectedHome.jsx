@@ -5,10 +5,8 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import RollCall from "./RollCall";
-import PlayersArray from "../hardCodedData/PlayersArray";
 
 function SelectedHome() {
-	const playersArr = PlayersArray();
 	const [showModal, setShowModal] = useState(false);
 	const handleShowModal = () => setShowModal(true);
 	const handleCloseModal = () => setShowModal(false);
@@ -16,9 +14,6 @@ function SelectedHome() {
 		name: "",
 		index: "",
 		players: [],
-	});
-	const [playersList, setPlayersList] = useState({
-		allPlayers: [],
 	});
 
 	const navigate = useNavigate();
@@ -34,33 +29,15 @@ function SelectedHome() {
 		}
 	}, [state]);
 
-	useEffect(() => {
-		const playerOrder = playersArr.sort((a, b) => {
-			if (a.lastName.toLowerCase() < b.lastName.toLowerCase()) return -1;
-			if (a.lastName.toLowerCase() > b.lastName.toLowerCase()) return 1;
-			// If last names are equal, sort by first name
-			if (a.firstName.toLowerCase() < b.firstName.toLowerCase()) return -1;
-			if (a.firstName.toLowerCase() > b.firstName.toLowerCase()) return 1;
-			return 0;
-		});
-
-		setPlayersList((prevState) => ({
-			...prevState,
-			allPlayers: playerOrder,
-		}));
-
-		console.log("Updated tournamentInfo:", tournamentInfo);
-	}, [tournamentInfo]);
-
 	const togglePlayerPresent = (id) => { 
-		setPlayersList((prevState) => {
-			const updatedPlayers = prevState.allPlayers.map((player) =>
+		setPlsetTournamentInfoayersList((prevState) => {
+			const updatedPlayers = prevState.players.map((player) =>
 				player.id === id
 					? { ...player, present: player.present === "yes" ? "no" : "yes" }
 					: player
 			);
 			console.log("New players state to be set:", updatedPlayers);
-			return { ...prevState, allPlayers: updatedPlayers };
+			return { ...prevState, players: updatedPlayers };
 		});
 	};
 
@@ -74,13 +51,11 @@ function SelectedHome() {
 		const TournamentIndexTransfer = {
 			type: "INDEX_TO_MANAGE_PLAYERS",
 			payload: index,
-			tournamentName: name,
+			name: name,
 		};
 	
 		navigate(`/managePlayers/${name}`, { state: TournamentIndexTransfer });
 	};
-	
-	
 	const onViewScoresClicked = () => {
 		navigate("/Friends/New"); // change location when ready
 	};
@@ -88,7 +63,7 @@ function SelectedHome() {
 		navigate("/Friends/New"); // change location when ready
 	};
 	const onSubmitPlayersClicked = () => {
-		const playersWithYes = playersList.allPlayers.filter(
+		const playersWithYes = tournamentInfo.players.filter(
 			(player) => player.present === "yes"
 		);
 		console.log("Players with yes:", playersWithYes);
