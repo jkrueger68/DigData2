@@ -21,6 +21,7 @@ function ManagePlayers() {
 	const [tournamentInfo, setTournamentInfo] = useState({
 		name: "",
 		index: "",
+		players: [],
 	});
 
 	const navigate = useNavigate();
@@ -33,10 +34,19 @@ function ManagePlayers() {
 				...prevState,
 				name: state.name,
 				index: state.payload,
+				players: state.players,
 			}));
+			setSelectedPlayers(state.players || []); 
 		}
 	}, [state]);
-	console.log("tournament name", tournamentInfo);
+
+	useEffect(() => {
+		setTournamentInfo((prevState) => ({
+			...prevState,
+			players: selectedPlayers,
+		}));
+		console.log("tournamentInfo players:", tournamentInfo.players);
+	}, [selectedPlayers]);
 
 	function sortPlayersByNames(players) {
 		return players.slice().sort((a, b) => {
@@ -53,12 +63,14 @@ function ManagePlayers() {
 			type: "INDEX_TO_SELECTED",
 			payload: tournamentInfo.index,
 			name: tournamentInfo.name,
+			updatedPlayers: tournamentInfo.players, 
 		};
-
+	
 		navigate(`/selected/${tournamentInfo.name}`, {
 			state: TournamentIndexTransfer,
 		});
 	};
+	
 
 	const handleCreatePlayer = () => {
 		// Add logic to add new player to playersArr here
@@ -71,13 +83,25 @@ function ManagePlayers() {
 
 	const handleSelectPlayer = (player) => {
 		setSelectedPlayers((prevSelectedPlayers) => {
+			let updatedSelectedPlayers;
 			if (prevSelectedPlayers.find((p) => p.id === player.id)) {
-				return prevSelectedPlayers.filter((p) => p.id !== player.id);
+				updatedSelectedPlayers = prevSelectedPlayers.filter((p) => p.id !== player.id);
 			} else {
-				return [...prevSelectedPlayers, player];
+				updatedSelectedPlayers = [
+					...prevSelectedPlayers, 
+					{ ...player, present: "yes" } // Add "yes" to the present attribute here
+				];
 			}
+	
+			setTournamentInfo((prevState) => ({
+				...prevState,
+				players: updatedSelectedPlayers,
+			}));
+	
+			return updatedSelectedPlayers;
 		});
 	};
+	
 
 	return (
 		<React.Fragment>

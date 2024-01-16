@@ -25,12 +25,14 @@ function SelectedHome() {
 				...prevState,
 				name: state.name,
 				index: state.payload,
+				players: state.updatedPlayers || prevState.players, // Use updated players if available
 			}));
 		}
 	}, [state]);
+	
 
 	const togglePlayerPresent = (id) => { 
-		setPlsetTournamentInfoayersList((prevState) => {
+		setTournamentInfo((prevState) => {
 			const updatedPlayers = prevState.players.map((player) =>
 				player.id === id
 					? { ...player, present: player.present === "yes" ? "no" : "yes" }
@@ -47,11 +49,13 @@ function SelectedHome() {
 	const onManagePlayersClicked = () => {
 		const index = tournamentInfo.index;
 		const name = tournamentInfo.name;
+		const players = tournamentInfo.players;
 	
 		const TournamentIndexTransfer = {
 			type: "INDEX_TO_MANAGE_PLAYERS",
 			payload: index,
 			name: name,
+			players: players,
 		};
 	
 		navigate(`/managePlayers/${name}`, { state: TournamentIndexTransfer });
