@@ -16,7 +16,7 @@ function ManagePlayers() {
         lastName: "",
         gender: "",
         skillLevel: "",
-        average: "",
+        average: 0, // Initialize 'average' to 0
     });
     const [selectedPlayers, setSelectedPlayers] = useState([]);
     const [tournamentInfo, setTournamentInfo] = useState({
@@ -45,7 +45,7 @@ function ManagePlayers() {
             ...prevState,
             players: selectedPlayers,
         }));
-    }, [selectedPlayers]);
+    }, [selectedPlayers, newPlayer]); // Reacting to changes in selectedPlayers and newPlayer
 
     function sortPlayersByNames(players) {
         return players.slice().sort((a, b) => {
@@ -100,13 +100,13 @@ function ManagePlayers() {
     };
 
     const handleCreatePlayer = () => {
-        setPlayersArr([...playersArr, { ...newPlayer, id: playersArr.length + 1 }]);
+        setPlayersArr([...playersArr, { ...newPlayer, id: playersArr.length + 1, average: 0 }]); // Ensure average is set to 0
         setNewPlayer({
             firstName: "",
             lastName: "",
             gender: "",
             skillLevel: "",
-            average: "",
+            average: 0, // Reset average to 0
         });
         setShowCreatePlayerModal(false);
     };
