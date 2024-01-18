@@ -72,6 +72,7 @@ function SelectedHome() {
 		);
 		console.log("Players with yes:", playersWithYes);
 
+		// add players with no to the pitty points list here
 		setTournamentInfo(prevState => ({
 			...prevState,
 			players: playersWithYes

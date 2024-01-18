@@ -3,7 +3,15 @@ import Table from "react-bootstrap/Table";
 import Form from "react-bootstrap/Form";
 
 function RollCall({ playerList, onTogglePresent }) {
-    // Use playerList prop directly without any useState
+    function sortPlayersByNames(players) {
+        return players.slice().sort((a, b) => {
+            if (a.lastName.toLowerCase() < b.lastName.toLowerCase()) return -1;
+            if (a.lastName.toLowerCase() > b.lastName.toLowerCase()) return 1;
+            if (a.firstName.toLowerCase() < b.firstName.toLowerCase()) return -1;
+            if (a.firstName.toLowerCase() > b.firstName.toLowerCase()) return 1;
+            return 0;
+        });
+    }
 
     console.log("sorted players array:", playerList);
     return (
@@ -20,7 +28,7 @@ function RollCall({ playerList, onTogglePresent }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {playerList.map(player => (
+                            {sortPlayersByNames(playerList).map(player => (
                                 <tr key={player.id}>
                                     <td>
                                         <Form.Check 

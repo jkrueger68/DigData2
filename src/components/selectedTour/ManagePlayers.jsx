@@ -11,19 +11,29 @@ function ManagePlayers() {
     const [playersArr, setPlayersArr] = useState(initialPlayersArray);
     const [showSelectPlayersModal, setShowSelectPlayersModal] = useState(false);
     const [showCreatePlayerModal, setShowCreatePlayerModal] = useState(false);
+	const [showEditPlayerModal, setShowEditPlayerModal] = useState(false);
+	const [editPlayerId, setEditPlayerId] = useState(null);
+	const [selectedPlayers, setSelectedPlayers] = useState([]);
     const [newPlayer, setNewPlayer] = useState({
         firstName: "",
         lastName: "",
         gender: "",
         skillLevel: "",
-        average: 0, // Initialize 'average' to 0
+		totalPoints: 0,
+		gamePlayed: 0,
+        average: 0, 
     });
-    const [selectedPlayers, setSelectedPlayers] = useState([]);
     const [tournamentInfo, setTournamentInfo] = useState({
         name: "",
         index: "",
         players: [],
     });
+	const [editPlayer, setEditPlayer] = useState({
+		firstName: "",
+		lastName: "",
+		gender: "",
+		skillLevel: "",
+	});
 
     const navigate = useNavigate();
     const { state } = useLocation();
@@ -45,7 +55,7 @@ function ManagePlayers() {
             ...prevState,
             players: selectedPlayers,
         }));
-    }, [selectedPlayers, newPlayer]); // Reacting to changes in selectedPlayers and newPlayer
+    }, [selectedPlayers, newPlayer]);
 
     function sortPlayersByNames(players) {
         return players.slice().sort((a, b) => {
@@ -56,6 +66,44 @@ function ManagePlayers() {
             return 0;
         });
     }
+
+	const handleEditInputChange = (e) => {
+		const { name, value } = e.target;
+        setEditPlayer((prevPlayer) => ({
+            ...prevPlayer,
+            [name]: value,
+        }));
+	};
+	const handleEditPlayer = (player) => {
+		setEditPlayerId(player.id);
+		setEditPlayer({
+			firstName: player.firstName,
+			lastName: player.lastName,
+			gender: player.gender,
+			skillLevel: player.skillLevel,
+		});
+		setShowEditPlayerModal(true);
+	};
+
+	const handleSaveEdit = () => {
+		const updatedSelectedPlayers = selectedPlayers.map(person => {
+            if (person.id === editPlayerId) {
+                return { ...person, ...editPlayer };
+            }
+            return person;
+        });
+
+		const updatedPlayersArray = playersArr.map(person => {
+            if (person.id === editPlayerId) {
+                return { ...person, ...editPlayer };
+            }
+            return person;
+        });
+
+        setSelectedPlayers(updatedSelectedPlayers);
+		setPlayersArr(updatedPlayersArray);
+        setShowEditPlayerModal(false);
+	};
 
     const handleBackClick = () => {
         const TournamentIndexTransfer = {
@@ -100,13 +148,15 @@ function ManagePlayers() {
     };
 
     const handleCreatePlayer = () => {
-        setPlayersArr([...playersArr, { ...newPlayer, id: playersArr.length + 1, average: 0 }]); // Ensure average is set to 0
+        setPlayersArr([...playersArr, { ...newPlayer, id: playersArr.length + 1, average: 0 }]);
         setNewPlayer({
             firstName: "",
             lastName: "",
             gender: "",
             skillLevel: "",
-            average: 0, // Reset average to 0
+			totalPoints: 0,
+			gamePlayed: 0,
+            average: 0, 
         });
         setShowCreatePlayerModal(false);
     };
@@ -149,6 +199,10 @@ function ManagePlayers() {
                     >
                         <Modal.Header closeButton>
                             <Modal.Title>Select Players</Modal.Title>
+							{/*add a search bar here*/}
+                        </Modal.Header>
+						<Modal.Header>
+                            <Modal.Title>Search Players:</Modal.Title>
                         </Modal.Header>
                         <Modal.Body>
                             {sortPlayersByNames(playersArr).map((player) => (
@@ -246,8 +300,84 @@ function ManagePlayers() {
                         </Modal.Footer>
                     </Modal>
 
+					{/* Modal for editing a player */}									
+					<Modal
+						show={showEditPlayerModal}
+						onHide={() => setShowEditPlayerModal(false)}
+					>
+						<Modal.Header closeButton>
+							<Modal.Title>Edit Player</Modal.Title>
+						</Modal.Header>
+						<Modal.Body>
+							<Form>
+							<Form>
+							{/* ... other form groups ... */}
+							<Form.Group className="mb-3">
+								<Form.Label>First Name:</Form.Label>
+								<Form.Control
+									type="text"
+									name="firstName"
+									value={editPlayer.firstName}
+									onChange={handleEditInputChange}
+								/>
+							</Form.Group>
+							<Form.Group className="mb-3">
+								<Form.Label>Last Name:</Form.Label>
+								<Form.Control
+									type="text"
+									name="lastName"
+									value={editPlayer.lastName}
+									onChange={handleEditInputChange}
+								/>
+							</Form.Group>
+							<Form.Group className="mb-3">
+                                    <Form.Label>Gender</Form.Label>
+                                    <Form.Select
+                                        name="gender"
+                                        value={editPlayer.gender}
+                                        onChange={handleEditInputChange}
+                                    >
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </Form.Select>
+                                </Form.Group>
+								<Form.Group className="mb-3">
+                                    <Form.Label>Skill Level</Form.Label>
+                                    <Form.Select
+                                        name="skillLevel"
+                                        value={editPlayer.skillLevel}
+                                        onChange={handleEditInputChange}
+                                    >
+                                        <option value="">Select Skill Level</option>
+                                        <option value="beginner">Beginner</option>
+                                        <option value="intermediate">Intermediate</option>
+                                        <option value="advanced">Advanced</option>
+                                    </Form.Select>
+                                </Form.Group>
+						</Form>
+							</Form>
+						</Modal.Body>
+						<Modal.Footer>
+						<Button
+							variant="secondary"
+							onClick={() => setShowEditPlayerModal(false)}
+						>
+							Close
+						</Button>
+						<Button variant="primary" onClick={handleSaveEdit}>
+							Save Changes
+						</Button>
+					</Modal.Footer>
+					</Modal>
+
                     {/* Table to display selected players */}
-                    <Table striped bordered hover>
+                    <Table 
+						responsive
+						striped 
+						bordered 
+						hover
+					>
                         <thead>
                             <tr>
                                 <th>Name</th>
@@ -267,7 +397,12 @@ function ManagePlayers() {
                                     <td>{player.skillLevel}</td>
                                     <td>{player.average}</td>
                                     <td>
-                                        <Button variant="warning">Edit</Button>
+									<Button
+											variant="warning"
+											onClick={() => handleEditPlayer(player)}
+										>
+											Edit
+										</Button>
                                     </td>
                                 </tr>
                             ))}
