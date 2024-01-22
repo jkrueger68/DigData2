@@ -3,6 +3,7 @@ import Table from "react-bootstrap/Table";
 import Form from "react-bootstrap/Form";
 
 function RollCall({ playerList, onTogglePresent }) {
+    
     function sortPlayersByNames(players) {
         return players.slice().sort((a, b) => {
             if (a.lastName.toLowerCase() < b.lastName.toLowerCase()) return -1;

@@ -74,6 +74,7 @@ function ManagePlayers() {
             [name]: value,
         }));
 	};
+
 	const handleEditPlayer = (player) => {
 		setEditPlayerId(player.id);
 		setEditPlayer({

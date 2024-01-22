@@ -25,13 +25,12 @@ function SelectedHome() {
 				...prevState,
 				name: state.name,
 				index: state.payload,
-				players: state.updatedPlayers || prevState.players, // Use updated players if available
+				players: state.updatedPlayers || prevState.players,
 			}));
 		}
 	}, [state]);
-	
 
-	const togglePlayerPresent = (id) => { 
+	const togglePlayerPresent = (id) => {
 		setTournamentInfo((prevState) => {
 			const updatedPlayers = prevState.players.map((player) =>
 				player.id === id
@@ -43,39 +42,53 @@ function SelectedHome() {
 		});
 	};
 
-	const onCreateMatchClicked = () => {
-		navigate("/selected/createMatch");
-	};
 	const onManagePlayersClicked = () => {
 		const index = tournamentInfo.index;
 		const name = tournamentInfo.name;
 		const players = tournamentInfo.players;
-	
+
 		const TournamentIndexTransfer = {
 			type: "INDEX_TO_MANAGE_PLAYERS",
 			payload: index,
 			name: name,
 			players: players,
 		};
-	
+
 		navigate(`/managePlayers/${name}`, { state: TournamentIndexTransfer });
 	};
+
+	const onCreateMatchClicked = () => {
+		const index = tournamentInfo.index;
+		const name = tournamentInfo.name;
+		const players = tournamentInfo.players;
+
+		const TournamentIndexTransfer = {
+			type: "INDEX_TO_CREATE_MATCH",
+			payload: index,
+			name: name,
+			players: players,
+		};
+
+		navigate(`/selected/createMatch/${name}`, { state: TournamentIndexTransfer });
+	};
+
 	const onViewScoresClicked = () => {
 		navigate("/Friends/New"); // change location when ready
 	};
+
 	const onEditMatchClicked = () => {
 		navigate("/Friends/New"); // change location when ready
 	};
-	const onSubmitPlayersClicked = () => {
-		const playersWithYes = tournamentInfo.players.filter(
-			(player) => player.present === "yes"
-		);
-		console.log("Players with yes:", playersWithYes);
 
-		// add players with no to the pitty points list here
-		setTournamentInfo(prevState => ({
+	const onSubmitPlayersClicked = () => {
+		const playersToKeep = tournamentInfo.players.filter(
+			(player) => player.present !== null
+		);
+		console.log("Players to keep:", playersToKeep);
+
+		setTournamentInfo((prevState) => ({
 			...prevState,
-			players: playersWithYes
+			players: playersToKeep,
 		}));
 		handleCloseModal();
 	};
@@ -101,16 +114,18 @@ function SelectedHome() {
 							</div>
 							<br />
 							<div className="col">
+								<Button onClick={() => onManagePlayersClicked()}>
+									Manage Players
+								</Button>
+							</div>
+							<br />
+							<div className="col">
 								<Button
 									onClick={onCreateMatchClicked}
 									variant="primary shadow mt-2"
 								>
 									Create Match
 								</Button>
-							</div>
-							<br />
-							<div className="col">
-							<Button onClick={() => onManagePlayersClicked()}>Manage Players</Button>
 							</div>
 							<br />
 							<div className="col">
@@ -134,6 +149,7 @@ function SelectedHome() {
 						</Card.Body>
 					</Card>
 
+					{/* Modal for Roll Call */}
 					<Modal show={showModal} onHide={handleCloseModal}>
 						<Modal.Header closeButton>
 							<Modal.Title>Roll Call</Modal.Title>

@@ -1,71 +1,146 @@
 import React from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import ButtonGroup from "react-bootstrap/ButtonGroup";
 import Dropdown from "react-bootstrap/Dropdown";
 import Table from "react-bootstrap/Table";
-import Form from "react-bootstrap/Form";
 
 function CreateMatch() {
+	const [teams, setTeams] = useState([]);
+	const [teamsGenerated, setTeamsGenerated] = useState(false);
+	const [teamAmount, setTeamAmount] = useState({
+		count: 0,
+		size: 0,
+	});
+	const [tournamentInfo, setTournamentInfo] = useState({
+		name: "",
+		index: "",
+		players: [],
+		teams: [],
+	});
+
+	// const navigate = useNavigate();
+	const { state } = useLocation();
+
+	useEffect(() => {
+		if (state?.type === "INDEX_TO_CREATE_MATCH") {
+			setTournamentInfo((prevState) => ({
+				...prevState,
+				name: state.name,
+				index: state.payload,
+				players: state.players,
+			}));
+			console.log("selectedPlayers state: ", tournamentInfo);
+			console.log("Team Amount: ", teamAmount);
+		}
+	}, [state, setTournamentInfo]);
+
+	const countAmountSelected = (eventKey) => {
+		setTeamAmount((prevState) => ({
+			...prevState,
+			count: eventKey,
+		}));
+	};
+
+	const sizeAmountSelected = (eventKey) => {
+		setTeamAmount((prevState) => ({
+			...prevState,
+			size: eventKey,
+		}));
+	};
+	const handleGenerateTeams = () => {
+		const organizedTeams = organizeTeams();
+		setTeams(organizedTeams);
+		setTournamentInfo((prevState) => ({
+			...prevState,
+			teams: organizedTeams,
+		}));
+		setTeamsGenerated(true);
+	};
+
+	const organizeTeams = () => {
+		const teamSize = Math.ceil(
+			tournamentInfo.players.length / teamAmount.count
+		);
+		let teams = [];
+
+		for (let i = 0; i < teamAmount.count; i++) {
+			teams.push(
+				tournamentInfo.players.slice(i * teamSize, (i + 1) * teamSize)
+			);
+		}
+
+		return teams;
+	};
+
 	return (
 		<React.Fragment>
 			<div className="row justify-content-center mx-2">
 				<div className="col">
 					<Card border="secondary" className="shadow">
 						<Card.Header>
-							<Card.Title className="mt-2">Create a Match</Card.Title>
+							<Card.Title className="mt-2">Create the Teams for {tournamentInfo.name}</Card.Title>
 						</Card.Header>
 						<Card.Body>
 							<div id="DROPDOWNS" className="row mt-2">
-								<div className="col-2 d-none d-xxl-block empty"></div>
-								<div className="col">
-									<Dropdown as={ButtonGroup}>
-										<Button variant="outline-dark">Team Count</Button>
-										<Dropdown.Toggle
-											split
-											variant="secondary"
-											id="dropdown-custom-2"
-										/>
-										<Dropdown.Menu>
-											<Dropdown.Item eventKey="1">2</Dropdown.Item>
-											<Dropdown.Item eventKey="2">3</Dropdown.Item>
-											<Dropdown.Item eventKey="3">4</Dropdown.Item>
-											<Dropdown.Item eventKey="4">5</Dropdown.Item>
-											<Dropdown.Item eventKey="5">6</Dropdown.Item>
-											<Dropdown.Item eventKey="6">7</Dropdown.Item>
-											<Dropdown.Item eventKey="7">8</Dropdown.Item>
-											<Dropdown.Item eventKey="8">9</Dropdown.Item>
-											<Dropdown.Item eventKey="9">10</Dropdown.Item>
-										</Dropdown.Menu>
-									</Dropdown>
+								<div className="row">
+									<div className="col-2 d-none d-xxl-block empty"></div>
+									<div className="col mb-3">
+										Number of players: {tournamentInfo.players.length}
+									</div>
+									<div className="col">
+										<Dropdown as={ButtonGroup} onSelect={countAmountSelected}>
+											<Button variant="outline-dark">Team Count</Button>
+											<Dropdown.Toggle
+												split
+												variant="secondary"
+												id="dropdown-custom-2"
+											/>
+											<Dropdown.Menu>
+												{Array.from({ length: 10 }, (_, i) => i + 1).map(
+													(number) => (
+														<Dropdown.Item
+															key={number}
+															eventKey={number.toString()}
+														>
+															{number}
+														</Dropdown.Item>
+													)
+												)}
+											</Dropdown.Menu>
+										</Dropdown>
+									</div>
+									{/* <div className="col">
+										<Dropdown as={ButtonGroup} onSelect={sizeAmountSelected}>
+											<Button variant="outline-dark">Team Size</Button>
+											<Dropdown.Toggle
+												split
+												variant="secondary"
+												id="dropdown-custom-2"
+											/>
+											<Dropdown.Menu>
+												{Array.from({ length: 10 }, (_, i) => i + 1).map(
+													(number) => (
+														<Dropdown.Item
+															key={number}
+															eventKey={number.toString()}
+														>
+															{number}
+														</Dropdown.Item>
+													)
+												)}
+											</Dropdown.Menu>
+										</Dropdown>
+									</div> */}
+									<div className="col-2 d-none d-xxl-block empty"></div>
 								</div>
-								<div className="col">
-									<Dropdown as={ButtonGroup}>
-										<Button variant="outline-dark">Team Size</Button>
-										<Dropdown.Toggle
-											split
-											variant="secondary"
-											id="dropdown-custom-2"
-										/>
-										<Dropdown.Menu>
-											<Dropdown.Item eventKey="1">2</Dropdown.Item>
-											<Dropdown.Item eventKey="2">3</Dropdown.Item>
-											<Dropdown.Item eventKey="3">4</Dropdown.Item>
-											<Dropdown.Item eventKey="4">5</Dropdown.Item>
-											<Dropdown.Item eventKey="5">6</Dropdown.Item>
-											<Dropdown.Item eventKey="6">7</Dropdown.Item>
-											<Dropdown.Item eventKey="7">8</Dropdown.Item>
-											<Dropdown.Item eventKey="8">9</Dropdown.Item>
-											<Dropdown.Item eventKey="9">10</Dropdown.Item>
-										</Dropdown.Menu>
-									</Dropdown>
-								</div>
-								<div className="col-2 d-none d-xxl-block empty"></div>
 							</div>
 							<br />
 							<Card id="GAMESETTINGS" border="secondary" className="shadow">
 								<Card.Body>
-									<Card.Title> Game Setting</Card.Title>
+									<Card.Title> Team Settings</Card.Title>
 									<Table
 										responsive="sm"
 										className="table-striped-columns align-middle"
@@ -74,7 +149,7 @@ function CreateMatch() {
 										<tbody className="table-group-divider">
 											<tr>
 												<th scope="row d-flex" />
-												<td class="fw-bolder">Absent players are given:</td>
+												<td className="fw-bolder">Absent players are given:</td>
 												<td>
 													<div className="row align-items-center">
 														<div className="col-2 flex-fill">
@@ -92,8 +167,9 @@ function CreateMatch() {
 															</div>
 														</div>
 														<div className="col-10 flex-fill">
-															<strong>No score:</strong> Best for competitive
-															tournaments
+															<strong>No score:</strong>
+															<br />
+															Best for competitive tournaments
 														</div>
 													</div>
 													<div className="row align-items-center table-group-divider">
@@ -121,7 +197,7 @@ function CreateMatch() {
 											</tr>
 											<tr className="table-group-divider">
 												<th scope="row d-flex" />
-												<td class="fw-bolder">Distribute players by:</td>
+												<td className="fw-bolder">Distribute players by:</td>
 												<td>
 													<div className="row align-items-center">
 														<div className="col-2">
@@ -193,84 +269,75 @@ function CreateMatch() {
 									</Table>
 								</Card.Body>
 							</Card>
-							<Button variant="primary shadow my-4">Add Player</Button>
-							<Card id="PLAYERTABLE" border="secondary" className="shadow">
-								<Card.Body>
-									<Table responsive="sm" striped>
-										<thead>
-											<tr>
-												<th>Present?</th>
-												<th>Full Name</th>
-												<th>Gender</th>
-												<th>Skill Level</th>
-												<th>Average PPG</th>
-											</tr>
-										</thead>
-										<tbody>
-											<tr>
-												<td>
-													<Form.Check aria-label="option 1" />
-												</td>
-												<td>Jonathon Nolden</td>
-												<td>Male</td>
-												<td>Da Best</td>
-												<td>a Millie</td>
-											</tr>
-											<tr>
-												<td>
-													<Form.Check aria-label="option 1" />
-												</td>
-												<td>Jason Krueger</td>
-												<td>Male</td>
-												<td>Good</td>
-												<td>13</td>
-											</tr>
-											<tr>
-												<td>
-													<Form.Check aria-label="option 1" />
-												</td>
-												<td>Peter Miron</td>
-												<td>Female</td>
-												<td>Advanced</td>
-												<td>69</td>
-											</tr>
-											<tr>
-												<td>
-													<Form.Check aria-label="option 1" />
-												</td>
-												<td>Jonathon Nolden</td>
-												<td>Male</td>
-												<td>Da Best</td>
-												<td>a Millie</td>
-											</tr>
-											<tr>
-												<td>
-													<Form.Check aria-label="option 1" />
-												</td>
-												<td>Jason Krueger</td>
-												<td>Male</td>
-												<td>Good</td>
-												<td>13</td>
-											</tr>
-											<tr>
-												<td>
-													<Form.Check aria-label="option 1" />
-												</td>
-												<td>Peter Miron</td>
-												<td>Female</td>
-												<td>Advanced</td>
-												<td>69</td>
-											</tr>
-										</tbody>
-									</Table>
-								</Card.Body>
-							</Card>
 							<div id="GENERATEBUTTON" className="row">
 								<div className="col">
-									<Button variant="primary shadow my-4">Generate Teams</Button>
+									<Button
+										variant="primary shadow my-4"
+										onClick={handleGenerateTeams}
+									>
+										Generate Teams
+									</Button>
 								</div>
 							</div>
 						</Card.Body>
+						{teamsGenerated && (
+							<div className="container">
+								<Card.Header>
+									<Card.Title className="mt-2">Teams:</Card.Title>
+								</Card.Header>
+								{teams.map((team, teamIndex) => (
+									<Card.Body key={teamIndex}>
+										<Card
+											id={`TEAMSTABLE_${teamIndex}`}
+											border="secondary"
+											className="shadow mb-3"
+										>
+											<Card.Body>
+												<Card.Title> Team {teamIndex + 1}</Card.Title>
+												<Table responsive="sm" striped bordered hover>
+													<thead>
+														<tr>
+															<th>Name</th>
+															<th>Gender</th>
+															<th>Skill Level</th>
+															<th>Average</th>
+															<th>Edit</th>
+														</tr>
+													</thead>
+													<tbody>
+														{team.map((player, index) => (
+															<tr key={player.id}>
+																<td>
+																	{player.firstName} {player.lastName}
+																</td>
+																<td>{player.gender}</td>
+																<td>{player.skillLevel}</td>
+																<td>{player.average}</td>
+																<td>
+																	<Button
+																		variant="warning"
+																		onClick={() => handleEditPlayer(player)}
+																	>
+																		Switch Team
+																	</Button>
+																</td>
+															</tr>
+														))}
+													</tbody>
+												</Table>
+											</Card.Body>
+										</Card>
+									</Card.Body>
+								))}
+							</div>
+						)}
+						<div id="TOSCORESBUTTON" className="row">
+							<div className="col">
+								<Button variant="primary shadow mb-4">
+									Back to Tournament Home
+								</Button>
+							</div>
+						</div>
 					</Card>
 				</div>
 			</div>
