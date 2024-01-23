@@ -6,6 +6,7 @@ import Button from "react-bootstrap/Button";
 import ButtonGroup from "react-bootstrap/ButtonGroup";
 import Dropdown from "react-bootstrap/Dropdown";
 import Table from "react-bootstrap/Table";
+import { Accordion } from "react-bootstrap";
 
 function CreateMatch() {
 	const [teams, setTeams] = useState([]);
@@ -44,12 +45,6 @@ function CreateMatch() {
 		}));
 	};
 
-	const sizeAmountSelected = (eventKey) => {
-		setTeamAmount((prevState) => ({
-			...prevState,
-			size: eventKey,
-		}));
-	};
 	const handleGenerateTeams = () => {
 		const organizedTeams = organizeTeams();
 		setTeams(organizedTeams);
@@ -71,48 +66,46 @@ function CreateMatch() {
 				tournamentInfo.players.slice(i * teamSize, (i + 1) * teamSize)
 			);
 		}
-
 		return teams;
 	};
 
 	return (
 		<React.Fragment>
-			<div className="row justify-content-center mx-2">
+			<div className="row justify-content-center">
 				<div className="col">
 					<Card border="secondary" className="shadow">
 						<Card.Header>
 							<Card.Title className="mt-2">Create the Teams for {tournamentInfo.name}</Card.Title>
 						</Card.Header>
 						<Card.Body>
-							<div id="DROPDOWNS" className="row mt-2">
-								<div className="row">
-									<div className="col-2 d-none d-xxl-block empty"></div>
-									<div className="col mb-3">
-										Number of players: {tournamentInfo.players.length}
-									</div>
-									<div className="col">
-										<Dropdown as={ButtonGroup} onSelect={countAmountSelected}>
-											<Button variant="outline-dark">Team Count</Button>
-											<Dropdown.Toggle
-												split
-												variant="secondary"
-												id="dropdown-custom-2"
-											/>
-											<Dropdown.Menu>
-												{Array.from({ length: 10 }, (_, i) => i + 1).map(
-													(number) => (
-														<Dropdown.Item
-															key={number}
-															eventKey={number.toString()}
-														>
-															{number}
-														</Dropdown.Item>
-													)
-												)}
-											</Dropdown.Menu>
-										</Dropdown>
-									</div>
-									{/* <div className="col">
+							<div id="DROPDOWNS" className="row mt-1">
+								<div className="col-2 d-none d-xxl-block empty"></div>
+								<div className="col">
+									Number of players: {tournamentInfo.players.length}
+								</div>
+								<div className="col">
+									<Dropdown as={ButtonGroup} onSelect={countAmountSelected}>
+										<Button variant="outline-dark"># of Teams</Button>
+										<Dropdown.Toggle
+											split
+											variant="secondary"
+											id="dropdown-custom-2"
+										/>
+										<Dropdown.Menu>
+											{Array.from({ length: 10 }, (_, i) => i + 1).map(
+												(number) => (
+													<Dropdown.Item
+														key={number}
+														eventKey={number.toString()}
+													>
+														{number}
+													</Dropdown.Item>
+												)
+											)}
+										</Dropdown.Menu>
+									</Dropdown>
+								</div>
+								{/* <div className="col">
 										<Dropdown as={ButtonGroup} onSelect={sizeAmountSelected}>
 											<Button variant="outline-dark">Team Size</Button>
 											<Dropdown.Toggle
@@ -134,8 +127,7 @@ function CreateMatch() {
 											</Dropdown.Menu>
 										</Dropdown>
 									</div> */}
-									<div className="col-2 d-none d-xxl-block empty"></div>
-								</div>
+								<div className="col-2 d-none d-xxl-block empty"></div>
 							</div>
 							<br />
 							<Card id="GAMESETTINGS" border="secondary" className="shadow">
@@ -143,6 +135,7 @@ function CreateMatch() {
 									<Card.Title> Team Settings</Card.Title>
 									<Table
 										responsive="sm"
+										size="sm"
 										className="table-striped-columns align-middle"
 									>
 										{/* <table className="table table-striped-columns align-middle"> */}
@@ -272,7 +265,7 @@ function CreateMatch() {
 							<div id="GENERATEBUTTON" className="row">
 								<div className="col">
 									<Button
-										variant="primary shadow my-4"
+										variant="primary shadow mt-3"
 										onClick={handleGenerateTeams}
 									>
 										Generate Teams
@@ -280,65 +273,72 @@ function CreateMatch() {
 								</div>
 							</div>
 						</Card.Body>
+					</Card>
 						{teamsGenerated && (
-							<div className="container">
-								<Card.Header>
-									<Card.Title className="mt-2">Teams:</Card.Title>
-								</Card.Header>
-								{teams.map((team, teamIndex) => (
-									<Card.Body key={teamIndex}>
-										<Card
-											id={`TEAMSTABLE_${teamIndex}`}
-											border="secondary"
-											className="shadow mb-3"
-										>
-											<Card.Body>
-												<Card.Title> Team {teamIndex + 1}</Card.Title>
-												<Table responsive="sm" striped bordered hover>
-													<thead>
-														<tr>
-															<th>Name</th>
-															<th>Gender</th>
-															<th>Skill Level</th>
-															<th>Average</th>
-															<th>Edit</th>
-														</tr>
-													</thead>
-													<tbody>
-														{team.map((player, index) => (
-															<tr key={player.id}>
-																<td>
-																	{player.firstName} {player.lastName}
-																</td>
-																<td>{player.gender}</td>
-																<td>{player.skillLevel}</td>
-																<td>{player.average}</td>
-																<td>
-																	<Button
-																		variant="warning"
-																		onClick={() => handleEditPlayer(player)}
-																	>
-																		Switch Team
-																	</Button>
-																</td>
+							<Card className="text-center">
+								<Card.Header>Teams:</Card.Header>
+								<Card.Body>
+									{teams.map((team, teamIndex) => (
+										<Accordion defaultActiveKey={['0']} alwaysOpen>
+											<Accordion.Item
+												eventKey={teamIndex}
+												id={`TEAMSTABLE_${teamIndex}`}
+												border="secondary"
+												className="shadow"
+											>
+												<Accordion.Header>Team {teamIndex + 1}</Accordion.Header>
+												<Accordion.Body style={{ padding: 0 }}>
+													<Table 
+														responsive="sm"
+														size="sm"
+														striped bordered hover
+														className="align-middle"
+													>
+														<thead>
+															<tr>
+																<th>Name</th>
+																<th>Gender</th>
+																<th>Skill Level</th>
+																<th>Average</th>
+																<th>Edit</th>
 															</tr>
-														))}
-													</tbody>
-												</Table>
-											</Card.Body>
-										</Card>
-									</Card.Body>
-								))}
-							</div>
-						)}
-						<div id="TOSCORESBUTTON" className="row">
+														</thead>
+														<tbody>
+															{team.map((player, index) => (
+																<tr key={player.id}>
+																	<td>
+																		{player.firstName} {player.lastName}
+																	</td>
+																	<td>{player.gender}</td>
+																	<td>{player.skillLevel}</td>
+																	<td>{player.average}</td>
+																	<td>
+																		<Button
+																			variant="warning"
+																			onClick={() => handleEditPlayer(player)}
+																		>
+																			Switch Team
+																		</Button>
+																	</td>
+																</tr>
+															))}
+														</tbody>
+													</Table>
+												</Accordion.Body>
+											</Accordion.Item>
+										</Accordion>
+									))}
+									<div id="TOSCORESBUTTON" className="row">
 							<div className="col">
-								<Button variant="primary shadow mb-4">
+								<Button variant="secondary shadow mt-3">
 									Back to Tournament Home
 								</Button>
 							</div>
 						</div>
-					</Card>
+								</Card.Body>
+							</Card>
+						)} 
+						
 				</div>
 			</div>
 		</React.Fragment>

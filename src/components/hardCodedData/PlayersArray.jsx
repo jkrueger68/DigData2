@@ -16,7 +16,7 @@ const players = [
 	},
 	{
 		id: 2,
-		firstName: "Jesse",
+		firstName: "Jessica",
 		lastName: "Davis",
 		gender: "female",
 		skillLevel: "beginner",

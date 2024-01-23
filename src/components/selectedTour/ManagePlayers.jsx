@@ -374,10 +374,10 @@ function ManagePlayers() {
 
                     {/* Table to display selected players */}
                     <Table 
-						responsive
-						striped 
-						bordered 
-						hover
+						responsive="sm"
+						size="sm"
+						striped bordered hover
+						className="align-middle"
 					>
                         <thead>
                             <tr>
