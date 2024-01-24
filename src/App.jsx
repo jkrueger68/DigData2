@@ -25,7 +25,8 @@ function App() {
 						<div className="col-2 d-none d-xxl-block empty" />
 						<div className="col my-4">
 						<Routes>
-							<Route path="/" element={<HomePage />}></Route>
+							<Route path="/" element={<Login />}></Route>
+                            <Route path="/HomePage" element={<HomePage />}></Route>
 							<Route path="/login" element={<Login />}></Route>
 							<Route path="/selected/:tournamentName" element={<SelectedHome />}></Route>
 							<Route path="/selected/createMatch/:tournamentName" element={<CreateMatch />}></Route>

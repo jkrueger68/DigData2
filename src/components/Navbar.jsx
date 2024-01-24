@@ -18,7 +18,7 @@ function NavBar() {
 					<Navbar.Toggle aria-controls="responsive-navbar-nav" />
 					<Navbar.Collapse id="responsive-navbar-nav">
 						<Nav className="me-auto">
-							<Nav.Link href="/">Create Tournament</Nav.Link>
+							<Nav.Link href="/HomePage">Create Tournament</Nav.Link>
 							<Nav.Link href="#pricing">Players</Nav.Link>
 							<Nav.Link href="/selected">Selected</Nav.Link>
 							<Nav.Link href="/selected/createMatch">Create Match</Nav.Link>
