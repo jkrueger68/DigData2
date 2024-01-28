@@ -1,16 +1,36 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import Card from "react-bootstrap/Card";
-import Button from "react-bootstrap/Button";
-import ButtonGroup from "react-bootstrap/ButtonGroup";
-import Dropdown from "react-bootstrap/Dropdown";
-import Table from "react-bootstrap/Table";
-import { Accordion } from "react-bootstrap";
+import {
+	DndContext,
+	closestCenter,
+	KeyboardSensor,
+	PointerSensor,
+	TouchSensor,
+	useSensor,
+	useSensors,
+	DragOverlay,
+} from "@dnd-kit/core";
+import {
+	SortableContext,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+	Accordion,
+	Table,
+	Dropdown,
+	ButtonGroup,
+	Button,
+	Card,
+} from "react-bootstrap";
+import AccordionItem from "./AccordionItem";
+import DraggablePlayerOverlay from "./DraggablePlayerOverlay";
+import HoverContext from "./HoverContext";
 
 function CreateMatch() {
 	const [teams, setTeams] = useState([]);
 	const [teamsGenerated, setTeamsGenerated] = useState(false);
+	const [activeId, setActiveId] = useState(null);
+	const [hoveredTeamId, setHoveredTeamId] = useState(null);
 	const [teamAmount, setTeamAmount] = useState({
 		count: 0,
 		size: 0,
@@ -22,7 +42,7 @@ function CreateMatch() {
 		teams: [],
 	});
 
-	// const navigate = useNavigate();
+	const navigate = useNavigate();
 	const { state } = useLocation();
 
 	useEffect(() => {
@@ -38,6 +58,73 @@ function CreateMatch() {
 		}
 	}, [state, setTournamentInfo]);
 
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor),
+		useSensor(TouchSensor)
+	);
+
+	const handleDragStart = (event) => {
+		setActiveId(event.active.id);
+	};
+
+	const handleDragEnd = (event) => {
+		const { active, over } = event;
+
+		if (active.id !== over.id) {
+			let newTeams = [...teams];
+			let sourceTeam, targetTeam, sourcePlayerIndex, targetTeamIndex;
+
+			newTeams.forEach((team, index) => {
+				const foundIndex = team.findIndex((player) => player.id === active.id);
+				if (foundIndex !== -1) {
+					sourceTeam = team;
+					sourcePlayerIndex = foundIndex;
+				}
+				if (team.some((player) => player.id === over.id)) {
+					targetTeamIndex = index;
+				}
+			});
+
+			if (sourceTeam && targetTeamIndex !== undefined) {
+				const [movedPlayer] = sourceTeam.splice(sourcePlayerIndex, 1);
+				newTeams[targetTeamIndex].push(movedPlayer);
+				setTeams(newTeams);
+			}
+			setHoveredTeamId(null);
+		}
+	};
+
+	const handleDragOver = (event) => {
+		const { over } = event;
+		const overId = over?.id;
+	
+		if (!overId) {
+			setHoveredTeamId(null);
+			return;
+		}
+	
+		const foundTeamIndex = teams.findIndex(team => 
+			team.some(player => player.id === overId)
+		);
+
+		if (foundTeamIndex !== -1) {
+			setHoveredTeamId(`team-${foundTeamIndex}`);
+		} else {
+			setHoveredTeamId(null);
+		}
+	};
+
+	const getActivePlayer = () => {
+		for (let team of teams) {
+			const player = team.find((p) => p.id === activeId);
+			if (player) {
+				return player;
+			}
+		}
+		return null;
+	};
+
 	const countAmountSelected = (eventKey) => {
 		setTeamAmount((prevState) => ({
 			...prevState,
@@ -47,6 +134,7 @@ function CreateMatch() {
 
 	const handleGenerateTeams = () => {
 		const organizedTeams = organizeTeams();
+		console.log("Organized Teams:", organizedTeams); // Debugging log
 		setTeams(organizedTeams);
 		setTournamentInfo((prevState) => ({
 			...prevState,
@@ -54,6 +142,20 @@ function CreateMatch() {
 		}));
 		setTeamsGenerated(true);
 	};
+
+	const handleSubmitTeams = () => {
+        const TournamentIndexTransfer = {
+            type: "INDEX_TO_SELECTED",
+            payload: tournamentInfo.index,
+            name: tournamentInfo.name,
+            updatedPlayers: tournamentInfo.players, 
+			teams: tournamentInfo.teams, 
+        };
+    
+        navigate(`/selected/${tournamentInfo.name}`, {
+            state: TournamentIndexTransfer,
+        });
+    };
 
 	const organizeTeams = () => {
 		const teamSize = Math.ceil(
@@ -75,7 +177,9 @@ function CreateMatch() {
 				<div className="col">
 					<Card border="secondary" className="shadow">
 						<Card.Header>
-							<Card.Title className="mt-2">Create the Teams for {tournamentInfo.name}</Card.Title>
+							<Card.Title className="mt-2">
+								Create the Teams for {tournamentInfo.name}
+							</Card.Title>
 						</Card.Header>
 						<Card.Body>
 							<div id="DROPDOWNS" className="row mt-1">
@@ -85,7 +189,9 @@ function CreateMatch() {
 								</div>
 								<div className="col">
 									<Dropdown as={ButtonGroup} onSelect={countAmountSelected}>
-										<Button variant="outline-dark"># of Teams</Button>
+										<Button variant="outline-dark">
+											# of Teams{teamAmount.count > 0 ? ` = ${teamAmount.count}` : ""}
+										</Button>
 										<Dropdown.Toggle
 											split
 											variant="secondary"
@@ -274,71 +380,57 @@ function CreateMatch() {
 							</div>
 						</Card.Body>
 					</Card>
-						{teamsGenerated && (
-							<Card className="text-center">
-								<Card.Header>Teams:</Card.Header>
-								<Card.Body>
-									{teams.map((team, teamIndex) => (
-										<Accordion defaultActiveKey={['0']} alwaysOpen>
-											<Accordion.Item
-												eventKey={teamIndex}
-												id={`TEAMSTABLE_${teamIndex}`}
-												border="secondary"
-												className="shadow"
-											>
-												<Accordion.Header>Team {teamIndex + 1}</Accordion.Header>
-												<Accordion.Body style={{ padding: 0 }}>
-													<Table 
-														responsive="sm"
-														size="sm"
-														striped bordered hover
-														className="align-middle"
-													>
-														<thead>
-															<tr>
-																<th>Name</th>
-																<th>Gender</th>
-																<th>Skill Level</th>
-																<th>Average</th>
-																<th>Edit</th>
-															</tr>
-														</thead>
-														<tbody>
-															{team.map((player, index) => (
-																<tr key={player.id}>
-																	<td>
-																		{player.firstName} {player.lastName}
-																	</td>
-																	<td>{player.gender}</td>
-																	<td>{player.skillLevel}</td>
-																	<td>{player.average}</td>
-																	<td>
-																		<Button
-																			variant="warning"
-																			onClick={() => handleEditPlayer(player)}
-																		>
-																			Switch Team
-																		</Button>
-																	</td>
-																</tr>
-															))}
-														</tbody>
-													</Table>
-												</Accordion.Body>
-											</Accordion.Item>
+					{teamsGenerated && (
+						<Card className="text-center">
+							<Card.Header>Teams:</Card.Header>
+							<Card.Body>
+								<HoverContext.Provider
+									value={{ hoveredTeamId, setHoveredTeamId }}
+								>
+									<DndContext
+										sensors={sensors}
+										onDragStart={handleDragStart}
+										onDragEnd={handleDragEnd}
+										onDragOver={handleDragOver}
+									>
+										<Accordion defaultActiveKey="0" alwaysOpen>
+											{teams.map((team, index) => {
+												const isOver = hoveredTeamId === `team-${index}`;
+												const style = isOver
+													? { border: "dashed #0d6efd", borderRadius: "5px" }
+													: {};
+
+												return (
+													<AccordionItem
+														key={`team-${index}`}
+														team={team}
+														teamIndex={index}
+														isOver={isOver}
+														style={style}
+													/>
+												);
+											})}
 										</Accordion>
-									))}
-									<div id="TOSCORESBUTTON" className="row">
-							<div className="col">
-								<Button variant="secondary shadow mt-3">
-									Back to Tournament Home
-								</Button>
+										<DragOverlay>
+											{activeId ? (
+												<DraggablePlayerOverlay player={getActivePlayer()} />
+											) : null}
+										</DragOverlay>
+									</DndContext>
+								</HoverContext.Provider>
+							</Card.Body>
+							<div id="SUBMITTEAMSBUTTON" className="row">
+								<div className="col">
+									<Button
+										variant="secondary shadow mb-3"
+										onClick={handleSubmitTeams}
+										>
+										Submit Teams
+									</Button>
+								</div>
 							</div>
-						</div>
-								</Card.Body>
-							</Card>
-						)} 
-						
+						</Card>
+					)}
 				</div>
 			</div>
 		</React.Fragment>

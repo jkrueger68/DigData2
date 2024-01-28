@@ -14,18 +14,21 @@ function SelectedHome() {
 		name: "",
 		index: "",
 		players: [],
+		teams: [],
 	});
 
 	const navigate = useNavigate();
 	const { state } = useLocation();
 
 	useEffect(() => {
+		console.log("state entering useEffect: ", state);
 		if (state?.type === "INDEX_TO_SELECTED") {
 			setTournamentInfo((prevState) => ({
 				...prevState,
 				name: state.name,
 				index: state.payload,
 				players: state.updatedPlayers || prevState.players,
+				teams: state.teams || prevState.teams,
 			}));
 		}
 	}, [state]);
@@ -61,12 +64,14 @@ function SelectedHome() {
 		const index = tournamentInfo.index;
 		const name = tournamentInfo.name;
 		const players = tournamentInfo.players;
+		const teams = tournamentInfo.teams;
 
 		const TournamentIndexTransfer = {
 			type: "INDEX_TO_CREATE_MATCH",
 			payload: index,
 			name: name,
 			players: players,
+			teams: teams,
 		};
 
 		navigate(`/selected/createMatch/${name}`, { state: TournamentIndexTransfer });
