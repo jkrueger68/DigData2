@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import TournamentContext from './TournamentContext';
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -28,7 +29,7 @@ function SelectedHome() {
 				name: state.name,
 				index: state.payload,
 				players: state.updatedPlayers || prevState.players,
-				teams: state.teams || prevState.teams,
+				teams: state.updatedTeams || prevState.teams,
 			}));
 		}
 	}, [state]);
@@ -57,7 +58,7 @@ function SelectedHome() {
 			players: players,
 		};
 
-		navigate(`/managePlayers/${name}`, { state: TournamentIndexTransfer });
+		navigate(`/selected/${tournamentInfo.name}/managePlayers`, { state: TournamentIndexTransfer });
 	};
 
 	const onCreateMatchClicked = () => {
@@ -65,6 +66,7 @@ function SelectedHome() {
 		const name = tournamentInfo.name;
 		const players = tournamentInfo.players;
 		const teams = tournamentInfo.teams;
+		console.log("tournamentInfo going to CreateMatch: ", tournamentInfo);
 
 		const TournamentIndexTransfer = {
 			type: "INDEX_TO_CREATE_MATCH",
@@ -99,7 +101,7 @@ function SelectedHome() {
 	};
 
 	return (
-		<React.Fragment>
+		<TournamentContext.Provider value={{ tournamentInfo, setTournamentInfo }}>
 			<div className="row justify-content-center mx-2">
 				<div className="col">
 					<Card border="secondary" className="shadow">
@@ -176,7 +178,7 @@ function SelectedHome() {
 					</Modal>
 				</div>
 			</div>
-		</React.Fragment>
+		</TournamentContext.Provider>
 	);
 }
 

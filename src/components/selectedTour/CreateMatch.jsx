@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import TournamentContext from './TournamentContext';
 import {
 	DndContext,
 	closestCenter,
@@ -28,41 +29,66 @@ import HoverContext from "./HoverContext";
 
 function CreateMatch() {
 	const [teams, setTeams] = useState([]);
-	const [teamsGenerated, setTeamsGenerated] = useState(false);
+	const [showTeams, setShowTeams] = useState(false);
 	const [activeId, setActiveId] = useState(null);
 	const [hoveredTeamId, setHoveredTeamId] = useState(null);
+	const [presentPlayers, setPresentPlayers] = useState([]);
+	const [nonPresentPlayers, setNonPresentPlayers] = useState([]);
 	const [teamAmount, setTeamAmount] = useState({
 		count: 0,
-		size: 0,
 	});
-	const [tournamentInfo, setTournamentInfo] = useState({
-		name: "",
-		index: "",
-		players: [],
-		teams: [],
-	});
+	const { tournamentInfo, setTournamentInfo } = useContext(TournamentContext);
 
 	const navigate = useNavigate();
 	const { state } = useLocation();
 
 	useEffect(() => {
 		if (state?.type === "INDEX_TO_CREATE_MATCH") {
-			setTournamentInfo((prevState) => ({
-				...prevState,
+			setTournamentInfo({
 				name: state.name,
 				index: state.payload,
 				players: state.players,
-			}));
+				teams: state.teams,
+			});
+
+			const presentPlayers = state.players.filter(player => player.present === "yes");
+			const absentPlayers = state.players.filter(player => player.present !== "yes");
+	
+			setPresentPlayers(presentPlayers);
+			setNonPresentPlayers(absentPlayers);
+
+			if (state.teams) {
+				setTeamAmount({ count: state.teams.length, size: 0 });
+				setTeams(state.teams);
+			}
+	
 			console.log("selectedPlayers state: ", tournamentInfo);
 			console.log("Team Amount: ", teamAmount);
 		}
 	}, [state, setTournamentInfo]);
+
+	useEffect(() => {
+		const updatedTeams = organizeTeamsWithPresentPlayers(presentPlayers);
+		setTeams(updatedTeams);
+
+		generateTeams();
+	}, [presentPlayers, teamAmount.count]);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
 		useSensor(KeyboardSensor),
 		useSensor(TouchSensor)
 	);
+
+	const getActivePlayer = () => {
+		for (let team of teams) {
+			const player = team.find((p) => p.id === activeId);
+			if (player) {
+				return player;
+			}
+		}
+		return null;
+	};
 
 	const handleDragStart = (event) => {
 		setActiveId(event.active.id);
@@ -91,6 +117,12 @@ function CreateMatch() {
 				newTeams[targetTeamIndex].push(movedPlayer);
 				setTeams(newTeams);
 			}
+
+			setTournamentInfo((prevState) => ({
+				...prevState,
+				teams: newTeams,
+			}));
+
 			setHoveredTeamId(null);
 		}
 	};
@@ -98,14 +130,14 @@ function CreateMatch() {
 	const handleDragOver = (event) => {
 		const { over } = event;
 		const overId = over?.id;
-	
+
 		if (!overId) {
 			setHoveredTeamId(null);
 			return;
 		}
-	
-		const foundTeamIndex = teams.findIndex(team => 
-			team.some(player => player.id === overId)
+
+		const foundTeamIndex = teams.findIndex((team) =>
+			team.some((player) => player.id === overId)
 		);
 
 		if (foundTeamIndex !== -1) {
@@ -115,16 +147,6 @@ function CreateMatch() {
 		}
 	};
 
-	const getActivePlayer = () => {
-		for (let team of teams) {
-			const player = team.find((p) => p.id === activeId);
-			if (player) {
-				return player;
-			}
-		}
-		return null;
-	};
-
 	const countAmountSelected = (eventKey) => {
 		setTeamAmount((prevState) => ({
 			...prevState,
@@ -132,42 +154,84 @@ function CreateMatch() {
 		}));
 	};
 
-	const handleGenerateTeams = () => {
+	const generateTeams = () => {
 		const organizedTeams = organizeTeams();
-		console.log("Organized Teams:", organizedTeams); // Debugging log
+		console.log("Organized Teams:", organizedTeams);
 		setTeams(organizedTeams);
 		setTournamentInfo((prevState) => ({
 			...prevState,
 			teams: organizedTeams,
 		}));
-		setTeamsGenerated(true);
+		setShowTeams(true);
 	};
 
 	const handleSubmitTeams = () => {
-        const TournamentIndexTransfer = {
-            type: "INDEX_TO_SELECTED",
-            payload: tournamentInfo.index,
-            name: tournamentInfo.name,
-            updatedPlayers: tournamentInfo.players, 
-			teams: tournamentInfo.teams, 
-        };
-    
-        navigate(`/selected/${tournamentInfo.name}`, {
-            state: TournamentIndexTransfer,
-        });
-    };
 
-	const organizeTeams = () => {
-		const teamSize = Math.ceil(
-			tournamentInfo.players.length / teamAmount.count
+		const TournamentIndexTransfer = {
+		  type: "INDEX_TO_SELECTED",
+		  payload: tournamentInfo.index,
+		  name: tournamentInfo.name,
+		  updatedPlayers: presentPlayers, 
+		  updatedTeams: teams, 
+		};
+	  
+		navigate(`/selected/${tournamentInfo.name}`, {
+		  state: TournamentIndexTransfer,
+		});
+	  };
+
+	const handleSwitchToPresent = (playerId) => {
+		const playerIndex = nonPresentPlayers.findIndex(
+			(player) => player.id === playerId
 		);
+		if (playerIndex === -1) {
+			console.log("Player not found in nonPresentPlayers");
+			return;
+		}
+
+		const player = { ...nonPresentPlayers[playerIndex], present: "yes" };
+
+		const updatedNonPresentPlayers = nonPresentPlayers.filter(
+			(_, index) => index !== playerIndex
+		);
+		setNonPresentPlayers(updatedNonPresentPlayers);
+
+		const updatedPresentPlayers = [...presentPlayers, player];
+		setPresentPlayers(updatedPresentPlayers);
+	};
+
+	const organizeTeamsWithPresentPlayers = (presentPlayers) => {
+		const teamSize = Math.floor(presentPlayers.length / teamAmount.count);
+		let remainder = presentPlayers.length % teamAmount.count;
 		let teams = [];
 
 		for (let i = 0; i < teamAmount.count; i++) {
-			teams.push(
-				tournamentInfo.players.slice(i * teamSize, (i + 1) * teamSize)
-			);
+			const endSlice =
+				i < remainder ? (i + 1) * teamSize + 1 : (i + 1) * teamSize;
+			teams.push(presentPlayers.slice(i * teamSize, endSlice));
 		}
+
+		return teams;
+	};
+
+	const organizeTeams = () => {
+		const totalPlayers = presentPlayers.length;
+		const baseTeamSize = Math.floor(totalPlayers / teamAmount.count);
+		let remainder = totalPlayers % teamAmount.count;
+		let teams = [];
+
+		let playerIndex = 0;
+
+		for (let i = 0; i < teamAmount.count; i++) {
+			let teamSize = baseTeamSize + (remainder > 0 ? 1 : 0);
+			remainder--;
+
+			let team = presentPlayers.slice(playerIndex, playerIndex + teamSize);
+			playerIndex += teamSize;
+
+			teams.push(team);
+		}
+
 		return teams;
 	};
 
@@ -185,12 +249,13 @@ function CreateMatch() {
 							<div id="DROPDOWNS" className="row mt-1">
 								<div className="col-2 d-none d-xxl-block empty"></div>
 								<div className="col">
-									Number of players: {tournamentInfo.players.length}
+									Number of players: {presentPlayers.length}
 								</div>
 								<div className="col">
 									<Dropdown as={ButtonGroup} onSelect={countAmountSelected}>
 										<Button variant="outline-dark">
-											# of Teams{teamAmount.count > 0 ? ` = ${teamAmount.count}` : ""}
+											# of Teams
+											{teamAmount.count > 0 ? ` = ${teamAmount.count}` : ""}
 										</Button>
 										<Dropdown.Toggle
 											split
@@ -211,28 +276,6 @@ function CreateMatch() {
 										</Dropdown.Menu>
 									</Dropdown>
 								</div>
-								{/* <div className="col">
-										<Dropdown as={ButtonGroup} onSelect={sizeAmountSelected}>
-											<Button variant="outline-dark">Team Size</Button>
-											<Dropdown.Toggle
-												split
-												variant="secondary"
-												id="dropdown-custom-2"
-											/>
-											<Dropdown.Menu>
-												{Array.from({ length: 10 }, (_, i) => i + 1).map(
-													(number) => (
-														<Dropdown.Item
-															key={number}
-															eventKey={number.toString()}
-														>
-															{number}
-														</Dropdown.Item>
-													)
-												)}
-											</Dropdown.Menu>
-										</Dropdown>
-									</div> */}
 								<div className="col-2 d-none d-xxl-block empty"></div>
 							</div>
 							<br />
@@ -368,19 +411,9 @@ function CreateMatch() {
 									</Table>
 								</Card.Body>
 							</Card>
-							<div id="GENERATEBUTTON" className="row">
-								<div className="col">
-									<Button
-										variant="primary shadow mt-3"
-										onClick={handleGenerateTeams}
-									>
-										Generate Teams
-									</Button>
-								</div>
-							</div>
 						</Card.Body>
 					</Card>
-					{teamsGenerated && (
+					{showTeams && (
 						<Card className="text-center">
 							<Card.Header>Teams:</Card.Header>
 							<Card.Body>
@@ -410,6 +443,39 @@ function CreateMatch() {
 													/>
 												);
 											})}
+											<Accordion.Item>
+												<Accordion.Header>Absent Players</Accordion.Header>
+												<Accordion.Body>
+													<Table
+														responsive="sm"
+														size="sm"
+														striped
+														bordered
+														hover
+														className="align-middle"
+													>
+														{/* ... No Table Header Content ... */}
+														{nonPresentPlayers.map((player) => (
+															<tr>
+																<td className="col-5">
+																	{player.firstName} {player.lastName}
+																</td>
+																<td className="col">
+																	<Button
+																		size="sm"
+																		variant="warning shadow"
+																		onClick={() =>
+																			handleSwitchToPresent(player.id)
+																		}
+																	>
+																		Present?
+																	</Button>
+																</td>
+															</tr>
+														))}
+													</Table>
+												</Accordion.Body>
+											</Accordion.Item>
 										</Accordion>
 										<DragOverlay>
 											{activeId ? (
@@ -424,7 +490,7 @@ function CreateMatch() {
 									<Button
 										variant="secondary shadow mb-3"
 										onClick={handleSubmitTeams}
-										>
+									>
 										Submit Teams
 									</Button>
 								</div>
