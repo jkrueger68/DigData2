@@ -1,6 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import { useNavigate, useLocation, Outlet, useMatch } from "react-router-dom";
 import TournamentContext from './TournamentContext';
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
@@ -20,6 +20,9 @@ function SelectedHome() {
 
 	const navigate = useNavigate();
 	const { state } = useLocation();
+	const location = useLocation();
+	const match = useMatch('/selected/:tournamentName');
+	const isExactMatch = match?.pathname === location.pathname;
 
 	useEffect(() => {
 		console.log("state entering useEffect: ", state);
@@ -75,8 +78,8 @@ function SelectedHome() {
 			players: players,
 			teams: teams,
 		};
-
-		navigate(`/selected/createMatch/${name}`, { state: TournamentIndexTransfer });
+		
+		navigate(`/selected/${tournamentInfo.name}/createMatch`, { state: TournamentIndexTransfer });
 	};
 
 	const onViewScoresClicked = () => {
@@ -98,12 +101,14 @@ function SelectedHome() {
 			players: playersToKeep,
 		}));
 		handleCloseModal();
+
 	};
 
 	return (
 		<TournamentContext.Provider value={{ tournamentInfo, setTournamentInfo }}>
 			<div className="row justify-content-center mx-2">
 				<div className="col">
+				{isExactMatch && (
 					<Card border="secondary" className="shadow">
 						<Card.Header>
 							insert logo here
@@ -155,6 +160,7 @@ function SelectedHome() {
 							<br />
 						</Card.Body>
 					</Card>
+				)}
 
 					{/* Modal for Roll Call */}
 					<Modal show={showModal} onHide={handleCloseModal}>
@@ -176,6 +182,7 @@ function SelectedHome() {
 							</Button>
 						</Modal.Footer>
 					</Modal>
+					<Outlet />
 				</div>
 			</div>
 		</TournamentContext.Provider>
