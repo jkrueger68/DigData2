@@ -11,6 +11,7 @@ import ManagePlayers from "./components/selectedTour/ManagePlayers";
 import PlayerScores from "./components/selectedTour/PlayerScores";
 import Container from "react-bootstrap/esm/Container";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { TournamentProvider } from './components/TournamentContext';
 
 function App() {
 	return (
@@ -21,24 +22,25 @@ function App() {
 		<div className="app-bg w-100">
 		  <Container>
 			<Router>
-			  <div className="row">
-				<div className="col-2 d-none d-xxl-block empty" />
-				<div className="col my-4">
-				  <Routes>
-					<Route path="/" element={<Login />}></Route>
-					<Route path="/HomePage" element={<HomePage />}></Route>
-					<Route path="/selected/:tournamentName" element={<SelectedHome />}>
-					  {/* Define nested routes here */}
-					  <Route path="createMatch" element={<CreateMatch />} />
-					  <Route path="generate" element={<GenerateTeam />} />
-					  <Route path="submitScores" element={<SubmitScores />} />
-					  <Route path="managePlayers" element={<ManagePlayers />} />
-					  <Route path="playerScores" element={<PlayerScores />} />
-					</Route>
-				  </Routes>
+			  <TournamentProvider> 
+				<div className="row">
+				  <div className="col-2 d-none d-xxl-block empty" />
+				  <div className="col my-4">
+					<Routes>
+					  <Route path="/" element={<Login />} />
+					  <Route path="/HomePage" element={<HomePage />} />
+					  <Route path="/selected/:tournamentName" element={<SelectedHome />}>
+						<Route path="createMatch" element={<CreateMatch />} />
+						<Route path="generate" element={<GenerateTeam />} />
+						<Route path="submitScores" element={<SubmitScores />} />
+						<Route path="managePlayers" element={<ManagePlayers />} />
+						<Route path="playerScores" element={<PlayerScores />} />
+					  </Route>
+					</Routes>
+				  </div>
+				  <div className="col-2 d-none d-xxl-block empty" />
 				</div>
-				<div className="col-2 d-none d-xxl-block empty" />
-			  </div>            
+			  </TournamentProvider>
 			</Router>
 		  </Container>
 		</div>

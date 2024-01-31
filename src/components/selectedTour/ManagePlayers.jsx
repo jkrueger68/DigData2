@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { TournamentContext } from '../../components/TournamentContext';
 import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
 import Table from "react-bootstrap/Table";
@@ -8,12 +9,14 @@ import Modal from "react-bootstrap/Modal";
 import initialPlayersArray from "../hardCodedData/PlayersArray";
 
 function ManagePlayers() {
+    console.log("Rendering ManagePlayers");
     const [playersArr, setPlayersArr] = useState(initialPlayersArray);
     const [showSelectPlayersModal, setShowSelectPlayersModal] = useState(false);
     const [showCreatePlayerModal, setShowCreatePlayerModal] = useState(false);
 	const [showEditPlayerModal, setShowEditPlayerModal] = useState(false);
 	const [editPlayerId, setEditPlayerId] = useState(null);
 	const [selectedPlayers, setSelectedPlayers] = useState([]);
+    const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
     const [newPlayer, setNewPlayer] = useState({
         firstName: "",
         lastName: "",
@@ -22,11 +25,6 @@ function ManagePlayers() {
 		totalPoints: 0,
 		gamePlayed: 0,
         average: 0, 
-    });
-    const [tournamentInfo, setTournamentInfo] = useState({
-        name: "",
-        index: "",
-        players: [],
     });
 	const [editPlayer, setEditPlayer] = useState({
 		firstName: "",
@@ -40,7 +38,7 @@ function ManagePlayers() {
 
     useEffect(() => {
         if (state?.type === "INDEX_TO_MANAGE_PLAYERS") {
-            setTournamentInfo((prevState) => ({
+            updateTournamentInfo((prevState) => ({
                 ...prevState,
                 name: state.name,
                 index: state.payload,
@@ -51,7 +49,7 @@ function ManagePlayers() {
     }, [state]);
 
     useEffect(() => {
-        setTournamentInfo((prevState) => ({
+        updateTournamentInfo((prevState) => ({
             ...prevState,
             players: selectedPlayers,
         }));
@@ -139,7 +137,7 @@ function ManagePlayers() {
                 ];
             }
     
-            setTournamentInfo((prevState) => ({
+            updateTournamentInfo((prevState) => ({
                 ...prevState,
                 players: updatedSelectedPlayers,
             }));

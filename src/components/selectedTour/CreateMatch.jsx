@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import TournamentContext from './TournamentContext';
+import TournamentContext from '../TournamentContext';
 import {
 	DndContext,
 	closestCenter,
@@ -233,6 +233,11 @@ function CreateMatch() {
 		}
 
 		return teams;
+	};
+
+	const handleStartGames = () => {
+        navigate(`/selected/${tournamentInfo.name}/submitScores`, {
+            state: { teams: teams }});
 	};
 
 	return (
@@ -492,6 +497,13 @@ function CreateMatch() {
 										onClick={handleSubmitTeams}
 									>
 										Submit Teams
+										Submit Teams
+                           	 </Button>
+                            	<Button
+                                	variant="primary shadow mb-3 ml-2" // Added some margin-left for spacing
+                                	onClick={handleStartGames}
+                            	>
+                                	Start Games
 									</Button>
 								</div>
 							</div>

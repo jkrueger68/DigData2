@@ -1,30 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Form from "react-bootstrap/Form";
 import MapTournament from "./MapTournament";
+import { TournamentContext } from '../../components/TournamentContext';
+
 
 function HomePage() {
+	const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
 	const [showModal, setShowModal] = useState(false);
 	const [newTournamentName, setNewTournamentName] = useState("");
 	const [tournaments, setTournaments] = useState([]);
-
 	const handleShowModal = () => setShowModal(true);
 	const handleCloseModal = () => setShowModal(false);
 
 	const navigate = useNavigate();
 
 	const handleCreateTournament = () => {
-		const newTournament = {
-			name: newTournamentName,
-			dateCreated: new Date().toLocaleDateString(),
-		};
-		setTournaments([...tournaments, newTournament]);
-		setNewTournamentName("");
-		handleCloseModal();
-	};
+        const newTournament = {
+            name: newTournamentName,
+            dateCreated: new Date().toLocaleDateString(),
+        };
+        //*updateTournamentInfo([...tournamentInfo, newTournament]);
+		setTournaments([...tournaments, newTournament]); // Update the tournaments array
+        setNewTournamentName("");
+        handleCloseModal();
+    };
 
 	const handleDeleteTournament = (indexToDelete) => {
 		setTournaments(tournaments.filter((_, index) => index !== indexToDelete));
@@ -38,14 +41,16 @@ function HomePage() {
 	};
 
 	const handleStartTournament = (index, name) => {
-		const TournamentIndexTransfer = {
-			type: "INDEX_TO_SELECTED",
-			payload: index,
-			name,
-		};
+        updateTournamentInfo({ name }); // Update the context with the selected tournament's name
+        console.log("Updated Tournament Info:", { name });
+        const TournamentIndexTransfer = {
+            type: "INDEX_TO_SELECTED",
+            payload: index,
+            name,
+        };
+        navigate(`/selected/${name}`, { state: TournamentIndexTransfer });
+    };
 
-		navigate(`/selected/${name}`, { state: TournamentIndexTransfer });
-	};
 
 	return (
 		<React.Fragment>

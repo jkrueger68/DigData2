@@ -1,7 +1,7 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation, Outlet, useMatch } from "react-router-dom";
-import TournamentContext from './TournamentContext';
+import {TournamentContext} from '../../components/TournamentContext';
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -11,12 +11,7 @@ function SelectedHome() {
 	const [showModal, setShowModal] = useState(false);
 	const handleShowModal = () => setShowModal(true);
 	const handleCloseModal = () => setShowModal(false);
-	const [tournamentInfo, setTournamentInfo] = useState({
-		name: "",
-		index: "",
-		players: [],
-		teams: [],
-	});
+	const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
 
 	const navigate = useNavigate();
 	const { state } = useLocation();
@@ -27,7 +22,7 @@ function SelectedHome() {
 	useEffect(() => {
 		console.log("state entering useEffect: ", state);
 		if (state?.type === "INDEX_TO_SELECTED") {
-			setTournamentInfo((prevState) => ({
+			updateTournamentInfo((prevState) => ({
 				...prevState,
 				name: state.name,
 				index: state.payload,
@@ -38,7 +33,7 @@ function SelectedHome() {
 	}, [state]);
 
 	const togglePlayerPresent = (id) => {
-		setTournamentInfo((prevState) => {
+		updateTournamentInfo((prevState) => {
 			const updatedPlayers = prevState.players.map((player) =>
 				player.id === id
 					? { ...player, present: player.present === "yes" ? "no" : "yes" }
@@ -50,18 +45,18 @@ function SelectedHome() {
 	};
 
 	const onManagePlayersClicked = () => {
-		const index = tournamentInfo.index;
-		const name = tournamentInfo.name;
-		const players = tournamentInfo.players;
+		// const index = tournamentInfo.index;
+		// const name = tournamentInfo.name;
+		// const players = tournamentInfo.players;
 
-		const TournamentIndexTransfer = {
-			type: "INDEX_TO_MANAGE_PLAYERS",
-			payload: index,
-			name: name,
-			players: players,
-		};
+		// const TournamentIndexTransfer = {
+		// 	type: "INDEX_TO_MANAGE_PLAYERS",
+		// 	payload: index,
+		// 	name: name,
+		// 	players: players,
+		// };
 
-		navigate(`/selected/${tournamentInfo.name}/managePlayers`, { state: TournamentIndexTransfer });
+		navigate(`/selected/${TournamentContext.name}/managePlayers`);
 	};
 
 	const onCreateMatchClicked = () => {
@@ -96,7 +91,7 @@ function SelectedHome() {
 		);
 		console.log("Players to keep:", playersToKeep);
 
-		setTournamentInfo((prevState) => ({
+		updateTournamentInfo((prevState) => ({
 			...prevState,
 			players: playersToKeep,
 		}));
@@ -105,7 +100,7 @@ function SelectedHome() {
 	};
 
 	return (
-		<TournamentContext.Provider value={{ tournamentInfo, setTournamentInfo }}>
+		<TournamentContext.Provider value={{ tournamentInfo, setTournamentInfo: updateTournamentInfo }}>
 			<div className="row justify-content-center mx-2">
 				<div className="col">
 				{isExactMatch && (
