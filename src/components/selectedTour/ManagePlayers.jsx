@@ -35,7 +35,7 @@ function ManagePlayers() {
 
     const navigate = useNavigate();
     const { state } = useLocation();
-    const match = useMatch('/selected/:tournamentName');
+    const match = useMatch('/selected/:tournamentName/managePlayers'); // this asshole right here was part of the issue it didnt have the correct path
 	const isExactMatch = match?.pathname === location.pathname;
 
     useEffect(() => {
