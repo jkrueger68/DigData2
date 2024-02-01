@@ -91,7 +91,7 @@ function SelectedHome() {
 			teams: teams,
 		};
 		
-		navigate(`/selected/${tournamentInfo.name}/createMatch`, { state: TournamentIndexTransfer }); // was tournamentinfo changed to tournamentinfo.name
+		navigate(`/selected/${currentTournament.name}/createMatch`, { state: TournamentIndexTransfer }); 
 	};
 
 	const onViewScoresClicked = () => {
