@@ -1,7 +1,7 @@
 import React from "react";
 import { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation, Outlet, useMatch } from "react-router-dom";
-import {TournamentContext} from '../../components/TournamentContext';
+import {TournamentContext} from '../TournamentContext';
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
@@ -12,26 +12,25 @@ function SelectedHome() {
 	const handleShowModal = () => setShowModal(true);
 	const handleCloseModal = () => setShowModal(false);
 	const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
+	const [currentTournament, setCurrentTournament] = useState(null);
 
 	const navigate = useNavigate();
 	const { state } = useLocation();
 	const location = useLocation();
-	const match = useMatch('/selected/:tournamentName');
+	const match = useMatch(`/selected/:tournamentName`);
 	const isExactMatch = match?.pathname === location.pathname;
 
 	useEffect(() => {
-		console.log("state entering useEffect: ", state);
+		const state = location.state;
+	
 		if (state?.type === "INDEX_TO_SELECTED") {
-			updateTournamentInfo((prevState) => ({
-				...prevState,
-				name: state.name,
-				index: state.payload,
-				players: state.updatedPlayers || prevState.players,
-				teams: state.updatedTeams || prevState.teams,
-			}));
+			// Find the tournament with the matching id
+			const tournament = tournamentInfo.find(t => t.id === state.id);
+			setCurrentTournament(tournament);
 		}
-	}, [state]);
-
+	}, [location.state, tournamentInfo]);
+	
+	
 	const togglePlayerPresent = (id) => {
 		updateTournamentInfo((prevState) => {
 			const updatedPlayers = prevState.players.map((player) =>
@@ -45,18 +44,11 @@ function SelectedHome() {
 	};
 
 	const onManagePlayersClicked = () => {
-		// const index = tournamentInfo.index;
-		// const name = tournamentInfo.name;
-		// const players = tournamentInfo.players;
+		updateTournamentInfo(currentTournament);
 
-		// const TournamentIndexTransfer = {
-		// 	type: "INDEX_TO_MANAGE_PLAYERS",
-		// 	payload: index,
-		// 	name: name,
-		// 	players: players,
-		// };
-
-		navigate(`/selected/${TournamentContext.name}/managePlayers`);
+		console.log("tournamentInfo:", tournamentInfo);
+		console.log("Name to be set:", tournamentInfo.name);
+		navigate(`/selected/${tournamentInfo.name}/managePlayers`);
 	};
 
 	const onCreateMatchClicked = () => {

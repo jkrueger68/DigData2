@@ -1,34 +1,25 @@
 import React, { createContext, useState } from 'react';
 
-// Create the context with default values
 export const TournamentContext = createContext({
-    tournamentInfo: [
-        {
-            name: '',
-            index: '',
-            players: [],
-            teams: [],
-            // Add other tournament-related states if needed
-        },
-    ],
+    tournamentInfo: [{}],
     updateTournamentInfo: () => {}
 });
 
-// Create a Provider Component
 export const TournamentProvider = ({ children }) => {
-    const [tournamentInfo, setTournamentInfo] = useState([
-        {
-            name: '',
-            index: '',
-            players: [],
-            teams: [],
-            // Add other tournament-related states if needed
-        },
-    ],);
+    const [tournamentInfo, setTournamentInfo] = useState([{}]);
 
-    // Function to update the tournament info
-    const updateTournamentInfo = (info) => {
-        setTournamentInfo(prevState => ({ ...prevState, ...info }));
+    const updateTournamentInfo = (newTournament) => {
+        setTournamentInfo(prevTournaments => {
+            const existingIndex = prevTournaments.findIndex(t => t.id === newTournament.id);
+            if (existingIndex > -1) {
+                // Update existing tournament
+                return prevTournaments.map((tournament, index) => 
+                    index === existingIndex ? newTournament : tournament);
+            } else {
+                // Add new tournament
+                return [...prevTournaments, newTournament];
+            }
+        });
     };
 
     return (

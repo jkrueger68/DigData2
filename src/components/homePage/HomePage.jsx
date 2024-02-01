@@ -5,12 +5,12 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Form from "react-bootstrap/Form";
 import MapTournament from "./MapTournament";
-import { TournamentContext } from '../../components/TournamentContext';
+import { TournamentContext } from '../TournamentContext';
 
 
 function HomePage() {
-	const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
 	const [showModal, setShowModal] = useState(false);
+	const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
 	const [newTournamentName, setNewTournamentName] = useState("");
 	const [tournaments, setTournaments] = useState([]);
 	const handleShowModal = () => setShowModal(true);
@@ -20,36 +20,46 @@ function HomePage() {
 
 	const handleCreateTournament = () => {
         const newTournament = {
-            name: newTournamentName,
-            dateCreated: new Date().toLocaleDateString(),
-        };
-        //*updateTournamentInfo([...tournamentInfo, newTournament]);
-		setTournaments([...tournaments, newTournament]); // Update the tournaments array
-        setNewTournamentName("");
-        handleCloseModal();
+			id: Date.now(),
+			name: newTournamentName,
+			dateCreated: new Date().toLocaleDateString(),
+		};
+		updateTournamentInfo(newTournament); // Pass the object directly
+		setNewTournamentName("");
+		handleCloseModal();
     };
+	
 
-	const handleDeleteTournament = (indexToDelete) => {
-		setTournaments(tournaments.filter((_, index) => index !== indexToDelete));
+	const handleDeleteTournament = (idToDelete) => {
+		updateTournamentInfo(prevTournaments => {
+			const updatedTournaments = { ...prevTournaments };
+			delete updatedTournaments[idToDelete];
+			return updatedTournaments;
+		});
 	};
 
-	const handleRenameTournament = (indexToRename, newName) => {
-		const updatedTournaments = tournaments.map((tournament, index) =>
-			index === indexToRename ? { ...tournament, name: newName } : tournament
-		);
-		setTournaments(updatedTournaments);
+	const handleRenameTournament = (idToRename, newName) => {
+		updateTournamentInfo(prevTournaments => ({
+			...prevTournaments,
+			[idToRename]: {
+				...prevTournaments[idToRename],
+				name: newName
+			}
+		}));
 	};
 
-	const handleStartTournament = (index, name) => {
-        updateTournamentInfo({ name }); // Update the context with the selected tournament's name
-        console.log("Updated Tournament Info:", { name });
-        const TournamentIndexTransfer = {
-            type: "INDEX_TO_SELECTED",
-            payload: index,
-            name,
-        };
-        navigate(`/selected/${name}`, { state: TournamentIndexTransfer });
-    };
+	const handleStartTournament = (index, tournament) => {
+		console.log("handleStartTournament: ", tournament);
+		navigate(`/selected/${tournament.name}`, { 
+			state: {
+				type: "INDEX_TO_SELECTED",
+				id: index,
+				tourId: tournament.id,
+				name: tournament.name,
+				dateCreated: tournament.dateCreated
+			}
+		});
+	};
 
 
 	return (
@@ -74,7 +84,7 @@ function HomePage() {
 							<br />
 							<br />
 							<MapTournament
-								tournaments={tournaments}
+								tournaments={Object.values(tournamentInfo)}
 								onDeleteTournament={handleDeleteTournament}
 								onRenameTournament={handleRenameTournament}
 								onStartTournament={handleStartTournament}

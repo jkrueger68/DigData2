@@ -4,16 +4,18 @@ import Button from "react-bootstrap/Button";
 import Accordion from "react-bootstrap/Accordion";
 import { Link } from "react-router-dom";
 
-function MapTournament({ tournaments =[], onDeleteTournament, onRenameTournament, onStartTournament }) {
+function MapTournament({ tournaments, onDeleteTournament, onRenameTournament, onStartTournament }) {
 	console.log({ onDeleteTournament, onRenameTournament }); // Debugging line
 
   const [renamingIndex, setRenamingIndex] = useState(null);
   const [newName, setNewName] = useState("");
 
+  const validTournaments = tournaments.filter(tournament => tournament && tournament.id);
+
   return (
     <React.Fragment>
       <Accordion defaultActiveKey="">
-        {tournaments.map((tournament, index) => (
+        {validTournaments.map((tournament, index) => (
           <Accordion.Item key={index} eventKey={index.toString()}>
             <Accordion.Header>
               {renamingIndex === index ? (
@@ -64,7 +66,7 @@ function MapTournament({ tournaments =[], onDeleteTournament, onRenameTournament
                 <div className="col-3">
                   <Button 
                     variant="primary shadow mt-2"
-                    onClick={() => onStartTournament(index, tournament.name)}
+                    onClick={() => onStartTournament(index, tournament)}
                   >
                     Start
                   </Button>
