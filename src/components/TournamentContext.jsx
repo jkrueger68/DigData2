@@ -8,17 +8,27 @@ export const TournamentContext = createContext({
 export const TournamentProvider = ({ children }) => {
     const [tournamentInfo, setTournamentInfo] = useState([{}]);
 
-    const updateTournamentInfo = (newTournament) => {
+    const updateTournamentInfo = (newTournamentOrFunction) => {
         setTournamentInfo(prevTournaments => {
-            const existingIndex = prevTournaments.findIndex(t => t.id === newTournament.id);
-            if (existingIndex > -1) {
-                // Update existing tournament
-                return prevTournaments.map((tournament, index) => 
-                    index === existingIndex ? newTournament : tournament);
+            console.log("Before update:", prevTournaments); // Log the state before update
+    
+            let updatedTournaments;
+            if (typeof newTournamentOrFunction === 'function') {
+                // Handle the case where the update logic is passed as a function
+                updatedTournaments = newTournamentOrFunction(prevTournaments);
             } else {
-                // Add new tournament
-                return [...prevTournaments, newTournament];
+                // Handle adding or updating tournaments
+                const existingIndex = prevTournaments.findIndex(t => t.id === newTournamentOrFunction.id);
+                if (existingIndex > -1) {
+                    updatedTournaments = prevTournaments.map((tournament, index) => 
+                        index === existingIndex ? newTournamentOrFunction : tournament);
+                } else {
+                    updatedTournaments = [...prevTournaments, newTournamentOrFunction];
+                }
             }
+    
+            console.log("After update:", updatedTournaments); // Log the state after update
+            return updatedTournaments;
         });
     };
 

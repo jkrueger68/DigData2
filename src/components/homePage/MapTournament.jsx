@@ -34,15 +34,15 @@ function MapTournament({ tournaments, onDeleteTournament, onRenameTournament, on
                 <div className="col-2">
                   {renamingIndex === index ? (
                     <Button 
-                      variant="success shadow mt-2"
-                      onClick={() => {
-                        onRenameTournament(index, newName);
-                        setRenamingIndex(null);
-                        setNewName("");
-                      }}
-                    >
-                      Save
-                    </Button>
+                    variant="success shadow mt-2"
+                    onClick={() => {
+                      onRenameTournament(tournament.id, newName); // Ensure tournament.id is used
+                      setRenamingIndex(null);
+                      setNewName("");
+                    }}
+                  >
+                    Save
+                  </Button>
                   ) : (
                     <Button 
                       variant="warning shadow mt-2"
@@ -58,7 +58,7 @@ function MapTournament({ tournaments, onDeleteTournament, onRenameTournament, on
                 <div className="col-3">
                   <Button 
                     variant="danger shadow mt-2"
-                    onClick={() => onDeleteTournament(index)}
+                    onClick={() => onDeleteTournament(tournament.id)}
                   >
                     Delete
                   </Button>

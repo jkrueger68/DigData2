@@ -9,26 +9,25 @@ import RollCall from "./RollCall";
 
 function SelectedHome() {
 	const [showModal, setShowModal] = useState(false);
-	const handleShowModal = () => setShowModal(true);
-	const handleCloseModal = () => setShowModal(false);
-	const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
+    const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
+    const [currentTournament, setCurrentTournament] = useState(null);
 
-	const navigate = useNavigate();
-	const { state } = useLocation();
-	const location = useLocation();
+    const navigate = useNavigate();
+    const { state } = useLocation();
 	const match = useMatch('/selected/:tournamentName');
 	const isExactMatch = match?.pathname === location.pathname;
-	const [currentTournament, setCurrentTournament] = useState(null);
 
 	useEffect(() => {
-		const state = location.state;
-		if (state?.type === "INDEX_TO_SELECTED") {
-			const foundTournament = tournamentInfo.find(t => t.id === state.tourId);
-			if (foundTournament) {
-				setCurrentTournament(foundTournament);
-			}
-		}
-	}, [location.state, tournamentInfo]);
+        if (state?.type === "INDEX_TO_SELECTED" && Array.isArray(tournamentInfo)) {
+            const foundTournament = tournamentInfo.find(t => t.id === state.tourId);
+            if (foundTournament) {
+                setCurrentTournament(foundTournament);
+            } else {
+                console.log("Tournament not found for id: ", state.tourId);
+            }
+        }
+		console.log("currentTournament at useEffect: ", currentTournament);
+    }, [state, updateTournamentInfo]);
 
 	useEffect(() => {
 		console.log("state entering useEffect: ", state);
@@ -43,17 +42,18 @@ function SelectedHome() {
 		}
 	}, [state]);
 
-	const togglePlayerPresent = (id) => {
-		updateTournamentInfo((prevState) => {
-			const updatedPlayers = prevState.players.map((player) =>
-				player.id === id
-					? { ...player, present: player.present === "yes" ? "no" : "yes" }
-					: player
-			);
-			console.log("New players state to be set:", updatedPlayers);
-			return { ...prevState, players: updatedPlayers };
-		});
-	};
+	const togglePlayerPresent = (playerId) => {
+        updateTournamentInfo(tournaments => tournaments.map(tournament =>
+            tournament.id === currentTournament.id ?
+                {
+                    ...tournament,
+                    players: tournament.players.map(player =>
+                        player.id === playerId ? { ...player, present: player.present === "yes" ? "no" : "yes" } : player
+                    )
+                } :
+                tournament
+        ));
+    };
 
 	const onManagePlayersClicked = () => {
 		if (currentTournament) {
@@ -117,14 +117,13 @@ function SelectedHome() {
 	};
 
 	return (
-		<TournamentContext.Provider value={{ tournamentInfo, setTournamentInfo: updateTournamentInfo }}>
+		<React.Fragment>
 			<div className="row justify-content-center mx-2">
 				<div className="col">
-				// {isExactMatch && (
 					<Card border="secondary" className="shadow">
 						<Card.Header>
 							insert logo here
-							<Card.Title className="mt-2">{tournamentInfo.name}</Card.Title>
+							<Card.Title className="mt-2">{currentTournament ? currentTournament.name : 'Tournament Name'}</Card.Title>
 						</Card.Header>
 						<Card.Body>
 							<Card.Subtitle className="mb-2 text-muted">
@@ -132,7 +131,7 @@ function SelectedHome() {
 							</Card.Subtitle>
 							<br />
 							<div className="col">
-								<Button onClick={handleShowModal} variant="warning shadow mt-2">
+								<Button onClick={() => setShowModal(true)} variant="warning shadow mt-2">
 									Roll Call
 								</Button>
 							</div>
@@ -172,21 +171,20 @@ function SelectedHome() {
 							<br />
 						</Card.Body>
 					</Card>
-				)}
 
-					{/* Modal for Roll Call */}
-					<Modal show={showModal} onHide={handleCloseModal}>
+					{/* Modal for Roll Call with corrected show and onHide properties */}
+					<Modal show={showModal} onHide={() => setShowModal(false)}>
 						<Modal.Header closeButton>
 							<Modal.Title>Roll Call</Modal.Title>
 						</Modal.Header>
 						<Modal.Body>
 							<RollCall
-								playerList={tournamentInfo.players}
+								playerList={currentTournament ? currentTournament.players : []}
 								onTogglePresent={togglePlayerPresent}
 							/>
 						</Modal.Body>
 						<Modal.Footer>
-							<Button variant="danger" onClick={handleCloseModal}>
+							<Button variant="danger" onClick={() => setShowModal(false)}>
 								Close
 							</Button>
 							<Button variant="primary" onClick={onSubmitPlayersClicked}>
@@ -197,7 +195,7 @@ function SelectedHome() {
 					<Outlet />
 				</div>
 			</div>
-		</TournamentContext.Provider>
+		</React.Fragment>
 	);
 }
 

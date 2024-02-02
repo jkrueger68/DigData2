@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
@@ -12,11 +12,15 @@ function HomePage() {
 	const [showModal, setShowModal] = useState(false);
 	const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
 	const [newTournamentName, setNewTournamentName] = useState("");
-	const [tournaments, setTournaments] = useState([]);
 	const handleShowModal = () => setShowModal(true);
 	const handleCloseModal = () => setShowModal(false);
 
 	const navigate = useNavigate();
+
+	useEffect(() => {
+		console.log("Tournament info updated:", tournamentInfo);
+		// Any additional setup or actions you want to take when tournamentInfo changes.
+	}, [updateTournamentInfo]);
 
 	const handleCreateTournament = () => {
         const newTournament = {
@@ -31,21 +35,20 @@ function HomePage() {
 	
 
 	const handleDeleteTournament = (idToDelete) => {
-		updateTournamentInfo(prevTournaments => {
-			const updatedTournaments = { ...prevTournaments };
-			delete updatedTournaments[idToDelete];
-			return updatedTournaments;
-		});
+		updateTournamentInfo(prevTournaments =>
+			prevTournaments.filter(tournament => tournament.id !== idToDelete)
+		);
 	};
+	
+	
 
 	const handleRenameTournament = (idToRename, newName) => {
-		updateTournamentInfo(prevTournaments => ({
-			...prevTournaments,
-			[idToRename]: {
-				...prevTournaments[idToRename],
-				name: newName
-			}
-		}));
+		console.log(`Renaming tournament ${idToRename} to ${newName}`); // Debugging line
+		updateTournamentInfo(prevTournaments =>
+			prevTournaments.map(tournament =>
+				tournament.id === idToRename ? { ...tournament, name: newName } : tournament
+			)
+		);
 	};
 
 	const handleStartTournament = (index, tournament) => {
