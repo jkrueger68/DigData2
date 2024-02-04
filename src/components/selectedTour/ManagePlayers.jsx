@@ -9,7 +9,6 @@ import Modal from "react-bootstrap/Modal";
 import initialPlayersArray from "../hardCodedData/PlayersArray";
 
 function ManagePlayers() {
-    console.log("Rendering ManagePlayers");
     const [playersArr, setPlayersArr] = useState(initialPlayersArray);
     const [showSelectPlayersModal, setShowSelectPlayersModal] = useState(false);
     const [showCreatePlayerModal, setShowCreatePlayerModal] = useState(false);
@@ -17,6 +16,7 @@ function ManagePlayers() {
 	const [editPlayerId, setEditPlayerId] = useState(null);
 	const [selectedPlayers, setSelectedPlayers] = useState([]);
     const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
+    const [currentTournament, setCurrentTournament] = useState(null);
     const [newPlayer, setNewPlayer] = useState({
         firstName: "",
         lastName: "",
@@ -39,23 +39,26 @@ function ManagePlayers() {
 	const isExactMatch = match?.pathname === location.pathname;
 
     useEffect(() => {
-        // if (state?.type === "INDEX_TO_MANAGE_PLAYERS") {
-        //     updateTournamentInfo((prevState) => ({
-        //         ...prevState,
-        //         name: state.name,
-        //         index: state.payload,
-        //         players: state.players,
-        //     }));
-        //     setSelectedPlayers(state.players || []); 
-        // }
+        if (state?.type === "INDEX_TO_MANAGE_PLAYERS") {
+            console.log("tournamentInfo at start of ManagePlayers useEffect: ", tournamentInfo, state);
+            const foundTournament = tournamentInfo.find(t => t.id === state.tourId);
+            if (foundTournament) {
+                setCurrentTournament(foundTournament);
+            } else {
+                console.log("Tournament not found for id: ", state.tourId);
+            }
+        }
     }, [state]);
-
+    
+    console.log("currentTournament after ManagePlayers useEffect: ", currentTournament);
     useEffect(() => {
-        // updateTournamentInfo((prevState) => ({
-        //     ...prevState,
-        //     players: selectedPlayers,
-        // }));
-    }, [selectedPlayers, newPlayer]);
+        updateTournamentInfo((prevState) => ({
+            ...prevState,
+            presentPlayers: selectedPlayers,
+        }));
+
+        console.log("tournamentInfo at ManagePlayers 2nd useEffect: ", tournamentInfo);
+    }, [selectedPlayers]);
 
     function sortPlayersByNames(players) {
         return players.slice().sort((a, b) => {
@@ -106,27 +109,6 @@ function ManagePlayers() {
         setShowEditPlayerModal(false);
 	};
 
-    const handleBackClick = () => {
-        const TournamentIndexTransfer = {
-            type: "INDEX_TO_SELECTED",
-            payload: tournamentInfo.index,
-            name: tournamentInfo.name,
-            updatedPlayers: tournamentInfo.players, 
-        };
-    
-        navigate(`/selected/${tournamentInfo.name}`, {
-            state: TournamentIndexTransfer,
-        });
-    };
-    
-    const handleInputChange = (event) => {
-        const { name, value } = event.target;
-        setNewPlayer((prevPlayer) => ({
-            ...prevPlayer,
-            [name]: value,
-        }));
-    };
-
     const handleSelectPlayer = (player) => {
         setSelectedPlayers((prevSelectedPlayers) => {
             let updatedSelectedPlayers;
@@ -138,16 +120,22 @@ function ManagePlayers() {
                     { ...player, present: "yes" }
                 ];
             }
-    
-            updateTournamentInfo((prevState) => ({
-                ...prevState,
-                players: updatedSelectedPlayers,
-            }));
-    
+
+            console.log("Player added to SelectedPlayer State: ", player);
+            console.log("Current SelectedPlayer State: ", selectedPlayers);
+
             return updatedSelectedPlayers;
         });
     };
-
+    
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        setNewPlayer((prevPlayer) => ({
+            ...prevPlayer,
+            [name]: value,
+        }));
+    };
+    
     const handleCreatePlayer = () => {
         setPlayersArr([...playersArr, { ...newPlayer, id: playersArr.length + 1, average: 0 }]);
         setNewPlayer({
@@ -162,9 +150,19 @@ function ManagePlayers() {
         setShowCreatePlayerModal(false);
     };
 
+    const handleBackClick = () => {
+        const TournamentIndexTransfer = {
+            type: "INDEX_TO_SELECTED",
+            id: currentTournament.id,
+        };
+    
+        navigate(`/selected/${currentTournament.name}`, {
+            state: TournamentIndexTransfer,
+        });
+    };
+    
     return (
         <React.Fragment>
-            {isExactMatch && (
                 <Card>
                     <Card.Header>
                         <Card.Title className="mt-2">
@@ -412,7 +410,6 @@ function ManagePlayers() {
                         </Table>
                     </Card.Body>
                 </Card>
-            )}
         </React.Fragment>
     );
 }

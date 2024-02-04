@@ -18,7 +18,8 @@ function SelectedHome() {
 	const isExactMatch = match?.pathname === location.pathname;
 
 	useEffect(() => {
-        if (state?.type === "INDEX_TO_SELECTED" && Array.isArray(tournamentInfo)) {
+		console.log("tournamentInfo at start of SelectedHome useEffect: ", tournamentInfo);
+        if (state?.type === "INDEX_TO_SELECTED") {
             const foundTournament = tournamentInfo.find(t => t.id === state.tourId);
             if (foundTournament) {
                 setCurrentTournament(foundTournament);
@@ -26,21 +27,21 @@ function SelectedHome() {
                 console.log("Tournament not found for id: ", state.tourId);
             }
         }
-		console.log("currentTournament at useEffect: ", currentTournament);
     }, [state, updateTournamentInfo]);
-
-	useEffect(() => {
-		console.log("state entering useEffect: ", state);
-		if (state?.type === "INDEX_TO_SELECTED") {
-			updateTournamentInfo((prevState) => ({
-				...prevState,
-				name: state.name,
-				index: state.payload,
-				players: state.updatedPlayers || prevState.players,
-				teams: state.updatedTeams || prevState.teams,
-			}));
-		}
-	}, [state]);
+	
+	console.log("currentTournament at end of SelectedHome useEffect: ", currentTournament);
+	// useEffect(() => {
+	// 	console.log("state entering useEffect: ", state);
+	// 	if (state?.type === "INDEX_TO_SELECTED") {
+	// 		updateTournamentInfo((prevState) => ({
+	// 			...prevState,
+	// 			name: state.name,
+	// 			index: state.payload,
+	// 			players: state.updatedPlayers || prevState.players,
+	// 			teams: state.updatedTeams || prevState.teams,
+	// 		}));
+	// 	}
+	// }, [state]);
 
 	const togglePlayerPresent = (playerId) => {
         updateTournamentInfo(tournaments => tournaments.map(tournament =>
@@ -57,23 +58,17 @@ function SelectedHome() {
 
 	const onManagePlayersClicked = () => {
 		if (currentTournament) {
-			navigate(`/selected/${currentTournament.name}/managePlayers`);
+			updateTournamentInfo(currentTournament);
+
+			const TournamentIndexTransfer = {
+				type: "INDEX_TO_MANAGE_PLAYERS",
+				tourId: currentTournament.id,
+			};
+
+			navigate(`/selected/${currentTournament.name}/managePlayers`, { state: TournamentIndexTransfer });
 		} else {
 			console.error("Tournament not selected or not found");
 		}
-	
-	//const onManagePlayersClicked = () => {
-		// const index = tournamentInfo.index;
-		// const name = tournamentInfo.name;
-		// const players = tournamentInfo.players;
-
-		// const TournamentIndexTransfer = {
-		// 	type: "INDEX_TO_MANAGE_PLAYERS",
-		// 	payload: index,
-		// 	name: name,
-		// 	players: players,
-		// };
-
 	};
 
 	const onCreateMatchClicked = () => {
@@ -120,79 +115,79 @@ function SelectedHome() {
 		<React.Fragment>
 			<div className="row justify-content-center mx-2">
 				<div className="col">
-					<Card border="secondary" className="shadow">
-						<Card.Header>
-							insert logo here
-							<Card.Title className="mt-2">{currentTournament ? currentTournament.name : 'Tournament Name'}</Card.Title>
-						</Card.Header>
-						<Card.Body>
-							<Card.Subtitle className="mb-2 text-muted">
-								Edit the tournament with the buttons below.
-							</Card.Subtitle>
-							<br />
-							<div className="col">
-								<Button onClick={() => setShowModal(true)} variant="warning shadow mt-2">
-									Roll Call
-								</Button>
-							</div>
-							<br />
-							<div className="col">
-								<Button onClick={() => onManagePlayersClicked()}>
-									Manage Players
-								</Button>
-							</div>
-							<br />
-							<div className="col">
-								<Button
-									onClick={onCreateMatchClicked}
-									variant="primary shadow mt-2"
-								>
-									Create Match
-								</Button>
-							</div>
-							<br />
-							<div className="col">
-								<Button
-									onClick={onViewScoresClicked}
-									variant="primary shadow mt-2"
-								>
-									View Scores
-								</Button>
-							</div>
-							<br />
-							<div className="col">
-								<Button
-									onClick={onEditMatchClicked}
-									variant="warning shadow mt-2"
-								>
-									View/Edit Match
-								</Button>
-							</div>
-							<br />
-						</Card.Body>
-					</Card>
+						<Card border="secondary" className="shadow">
+							<Card.Header>
+								insert logo here
+								<Card.Title className="mt-2">{currentTournament ? currentTournament.name : 'Tournament Name'}</Card.Title>
+							</Card.Header>
+							<Card.Body>
+								<Card.Subtitle className="mb-2 text-muted">
+									Edit the tournament with the buttons below.
+								</Card.Subtitle>
+								<br />
+								<div className="col">
+									<Button onClick={() => setShowModal(true)} variant="warning shadow mt-2">
+										Roll Call
+									</Button>
+								</div>
+								<br />
+								<div className="col">
+									<Button onClick={() => onManagePlayersClicked()}>
+										Manage Players
+									</Button>
+								</div>
+								<br />
+								<div className="col">
+									<Button
+										onClick={onCreateMatchClicked}
+										variant="primary shadow mt-2"
+									>
+										Create Match
+									</Button>
+								</div>
+								<br />
+								<div className="col">
+									<Button
+										onClick={onViewScoresClicked}
+										variant="primary shadow mt-2"
+									>
+										View Scores
+									</Button>
+								</div>
+								<br />
+								<div className="col">
+									<Button
+										onClick={onEditMatchClicked}
+										variant="warning shadow mt-2"
+									>
+										View/Edit Match
+									</Button>
+								</div>
+								<br />
+							</Card.Body>
+						</Card>
 
-					{/* Modal for Roll Call with corrected show and onHide properties */}
-					<Modal show={showModal} onHide={() => setShowModal(false)}>
-						<Modal.Header closeButton>
-							<Modal.Title>Roll Call</Modal.Title>
-						</Modal.Header>
-						<Modal.Body>
-							<RollCall
-								playerList={currentTournament ? currentTournament.players : []}
-								onTogglePresent={togglePlayerPresent}
-							/>
-						</Modal.Body>
-						<Modal.Footer>
-							<Button variant="danger" onClick={() => setShowModal(false)}>
-								Close
-							</Button>
-							<Button variant="primary" onClick={onSubmitPlayersClicked}>
-								Submit Players
-							</Button>
-						</Modal.Footer>
-					</Modal>
-					<Outlet />
+						{/* Modal for Roll Call with corrected show and onHide properties */}
+						<Modal show={showModal} onHide={() => setShowModal(false)}>
+							<Modal.Header closeButton>
+								<Modal.Title>Roll Call</Modal.Title>
+							</Modal.Header>
+							<Modal.Body>
+								<RollCall
+									playerList={currentTournament ? currentTournament.players : []}
+									onTogglePresent={togglePlayerPresent}
+								/>
+							</Modal.Body>
+							<Modal.Footer>
+								<Button variant="danger" onClick={() => setShowModal(false)}>
+									Close
+								</Button>
+								<Button variant="primary" onClick={onSubmitPlayersClicked}>
+									Submit Players
+								</Button>
+							</Modal.Footer>
+						</Modal>
+						<Outlet />
 				</div>
 			</div>
 		</React.Fragment>

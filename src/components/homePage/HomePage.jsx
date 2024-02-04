@@ -24,23 +24,22 @@ function HomePage() {
 
 	const handleCreateTournament = () => {
         const newTournament = {
-			id: Date.now(),
+			id: Date.now(), // Unique ID for the tournament
 			name: newTournamentName,
-			dateCreated: new Date().toLocaleDateString(),
+			dateCreated: new Date().toISOString(),
+			presentPlayers: [],
+			absentPlayers: [],
 		};
 		updateTournamentInfo(newTournament); // Pass the object directly
 		setNewTournamentName("");
 		handleCloseModal();
     };
-	
 
 	const handleDeleteTournament = (idToDelete) => {
 		updateTournamentInfo(prevTournaments =>
 			prevTournaments.filter(tournament => tournament.id !== idToDelete)
 		);
 	};
-	
-	
 
 	const handleRenameTournament = (idToRename, newName) => {
 		console.log(`Renaming tournament ${idToRename} to ${newName}`); // Debugging line
@@ -56,14 +55,10 @@ function HomePage() {
 		navigate(`/selected/${tournament.name}`, { 
 			state: {
 				type: "INDEX_TO_SELECTED",
-				id: index,
 				tourId: tournament.id,
-				name: tournament.name,
-				dateCreated: tournament.dateCreated
 			}
 		});
 	};
-
 
 	return (
 		<React.Fragment>

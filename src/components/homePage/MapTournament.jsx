@@ -5,7 +5,6 @@ import Accordion from "react-bootstrap/Accordion";
 import { Link } from "react-router-dom";
 
 function MapTournament({ tournaments, onDeleteTournament, onRenameTournament, onStartTournament }) {
-	console.log({ onDeleteTournament, onRenameTournament }); // Debugging line
 
   const [renamingIndex, setRenamingIndex] = useState(null);
   const [newName, setNewName] = useState("");
