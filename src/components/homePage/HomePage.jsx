@@ -25,18 +25,16 @@ function HomePage() {
 
 	useEffect(() => {
 		console.log("Tournament info updated:", tournamentInfo);
-		// Any additional setup or actions you want to take when tournamentInfo changes.
 	}, [tournamentInfo]);
 
 	const handleCreateTournament = () => {
         const newTournament = {
-			id: Date.now(), // Unique ID for the tournament
+			id: Date.now(),
 			name: newTournamentName,
 			dateCreated: new Date().toISOString(),
 			presentPlayers: [],
-			absentPlayers: [],
 		};
-		addTournament(newTournament); // Pass the object directly
+		addTournament(newTournament);
 		setNewTournamentName("");
 		handleCloseModal();
     };
@@ -46,8 +44,7 @@ function HomePage() {
 	};
 
 	const handleRenameTournament = (idToRename, newName) => {
-		console.log(`Renaming tournament ${idToRename} to ${newName}`); // Debugging line
-		// Assuming updateTournamentInfo expects an ID and an object with updates
+		console.log(`Renaming tournament ${idToRename} to ${newName}`);
 		updateTournamentInfo(idToRename, { name: newName });
 	};
 	

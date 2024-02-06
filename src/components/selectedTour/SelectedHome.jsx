@@ -32,32 +32,16 @@ function SelectedHome() {
     }, [state, updateTournamentInfo]);
 	
 	console.log("currentTournament at end of SelectedHome useEffect: ", currentTournament);
-	// useEffect(() => {
-	// 	console.log("state entering useEffect: ", state);
-	// 	if (state?.type === "INDEX_TO_SELECTED") {
-	// 		updateTournamentInfo((prevState) => ({
-	// 			...prevState,
-	// 			name: state.name,
-	// 			index: state.payload,
-	// 			players: state.updatedPlayers || prevState.players,
-	// 			teams: state.updatedTeams || prevState.teams,
-	// 		}));
-	// 	}
-	// }, [state]);
 
 	const togglePlayerPresent = (playerId) => {
-        updateTournamentInfo(tournaments => tournaments.map(tournament =>
-            tournament.id === currentTournament.id ?
-                {
-                    ...tournament,
-                    players: tournament.players.map(player =>
-                        player.id === playerId ? { ...player, present: player.present === "yes" ? "no" : "yes" } : player
-                    )
-                } :
-                tournament
-        ));
-    };
-
+		setCurrentTournament(currentTournament => ({
+			...currentTournament,
+			presentPlayers: currentTournament.presentPlayers.map(player => 
+				player.id === playerId ? { ...player, present: player.present === "yes" ? "no" : "yes" } : player
+			),
+		}));
+	};
+		
 	const sortPlayersByNames = (players) => {
         return players.slice().sort((a, b) => {
             if (a.lastName.toLowerCase() < b.lastName.toLowerCase()) return -1;
@@ -82,21 +66,18 @@ function SelectedHome() {
 	};
 
 	const onCreateMatchClicked = () => {
-		const index = tournamentInfo.index;
-		const name = tournamentInfo.name;
-		const players = tournamentInfo.players;
-		const teams = tournamentInfo.teams;
-		console.log("tournamentInfo going to CreateMatch: ", tournamentInfo);
+		if (currentTournament) {
+			const TournamentIndexTransfer = {
+				type: "INDEX_TO_CREATE_MATCH",
+				tourId: currentTournament.id,
+			};
 
-		const TournamentIndexTransfer = {
-			type: "INDEX_TO_CREATE_MATCH",
-			payload: index,
-			name: name,
-			players: players,
-			teams: teams,
-		};
+			navigate(`/selected/${currentTournament.name}/createMatch`, { state: TournamentIndexTransfer });
+		} else {
+			console.error("Tournament not selected or not found");
+		}
 		
-		navigate(`/selected/${currentTournament.name}/createMatch`, { state: TournamentIndexTransfer }); 
+		 
 	};
 
 	const onViewScoresClicked = () => {
@@ -108,16 +89,13 @@ function SelectedHome() {
 	};
 
 	const onSubmitPlayersClicked = () => {
-		const playersToKeep = tournamentInfo.players.filter(
+		const playersToKeep = currentTournament.presentPlayers.filter(
 			(player) => player.present !== null
 		);
 		console.log("Players to keep:", playersToKeep);
 
-		updateTournamentInfo((prevState) => ({
-			...prevState,
-			players: playersToKeep,
-		}));
-		handleCloseModal();
+		updateTournamentInfo(currentTournament.id, { presentPlayers: playersToKeep });
+		setShowModal(false);
 
 	};
 
