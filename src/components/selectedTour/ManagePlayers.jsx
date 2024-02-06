@@ -15,8 +15,15 @@ function ManagePlayers() {
 	const [showEditPlayerModal, setShowEditPlayerModal] = useState(false);
 	const [editPlayerId, setEditPlayerId] = useState(null);
 	const [selectedPlayers, setSelectedPlayers] = useState([]);
-    const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
     const [currentTournament, setCurrentTournament] = useState(null);
+    const {
+        tournamentInfo,
+        selectedTournamentId,
+		updateTournamentInfo,
+		selectTournament,
+		getSelectedTournament
+        // Make sure to add any other methods you intend to use from the context here
+    } = useContext(TournamentContext);
     const [newPlayer, setNewPlayer] = useState({
         firstName: "",
         lastName: "",
@@ -40,25 +47,22 @@ function ManagePlayers() {
 
     useEffect(() => {
         if (state?.type === "INDEX_TO_MANAGE_PLAYERS") {
-            console.log("tournamentInfo at start of ManagePlayers useEffect: ", tournamentInfo, state);
-            const foundTournament = tournamentInfo.find(t => t.id === state.tourId);
-            if (foundTournament) {
-                setCurrentTournament(foundTournament);
-            } else {
-                console.log("Tournament not found for id: ", state.tourId);
-            }
+            selectTournament(state.tourId);
+			setCurrentTournament(getSelectedTournament);
         }
     }, [state]);
     
     console.log("currentTournament after ManagePlayers useEffect: ", currentTournament);
-    useEffect(() => {
-        updateTournamentInfo((prevState) => ({
-            ...prevState,
-            presentPlayers: selectedPlayers,
-        }));
+    console.log("selectedTournamentId in ManagePlayers: ", selectedTournamentId);
+    
+    // useEffect(() => {
+    //     updateTournamentInfo((prevState) => ({
+    //         ...prevState,
+    //         presentPlayers: selectedPlayers,
+    //     }));
 
-        console.log("tournamentInfo at ManagePlayers 2nd useEffect: ", tournamentInfo);
-    }, [selectedPlayers]);
+    //     console.log("tournamentInfo at ManagePlayers 2nd useEffect: ", tournamentInfo);
+    // }, [selectedPlayers]);
 
     function sortPlayersByNames(players) {
         return players.slice().sort((a, b) => {
@@ -109,6 +113,7 @@ function ManagePlayers() {
         setShowEditPlayerModal(false);
 	};
 
+    console.log("Current SelectedPlayer State: ", selectedPlayers);
     const handleSelectPlayer = (player) => {
         setSelectedPlayers((prevSelectedPlayers) => {
             let updatedSelectedPlayers;
@@ -122,7 +127,6 @@ function ManagePlayers() {
             }
 
             console.log("Player added to SelectedPlayer State: ", player);
-            console.log("Current SelectedPlayer State: ", selectedPlayers);
 
             return updatedSelectedPlayers;
         });
@@ -151,9 +155,12 @@ function ManagePlayers() {
     };
 
     const handleBackClick = () => {
+        updateTournamentInfo(selectedTournamentId, { presentPlayers: selectedPlayers });
+        console.log("tournamentInfo after ManagePlayers handleBackClick: ", tournamentInfo);
+
         const TournamentIndexTransfer = {
             type: "INDEX_TO_SELECTED",
-            id: currentTournament.id,
+            tourId: currentTournament.id,
         };
     
         navigate(`/selected/${currentTournament.name}`, {

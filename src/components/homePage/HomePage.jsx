@@ -10,17 +10,23 @@ import { TournamentContext } from '../TournamentContext';
 
 function HomePage() {
 	const [showModal, setShowModal] = useState(false);
-	const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
 	const [newTournamentName, setNewTournamentName] = useState("");
 	const handleShowModal = () => setShowModal(true);
 	const handleCloseModal = () => setShowModal(false);
+	const {
+        tournamentInfo,
+        addTournament,
+        deleteTournament,
+		updateTournamentInfo
+        // Make sure to add any other methods you intend to use from the context here
+    } = useContext(TournamentContext);
 
 	const navigate = useNavigate();
 
 	useEffect(() => {
 		console.log("Tournament info updated:", tournamentInfo);
 		// Any additional setup or actions you want to take when tournamentInfo changes.
-	}, [updateTournamentInfo]);
+	}, [tournamentInfo]);
 
 	const handleCreateTournament = () => {
         const newTournament = {
@@ -30,25 +36,21 @@ function HomePage() {
 			presentPlayers: [],
 			absentPlayers: [],
 		};
-		updateTournamentInfo(newTournament); // Pass the object directly
+		addTournament(newTournament); // Pass the object directly
 		setNewTournamentName("");
 		handleCloseModal();
     };
 
 	const handleDeleteTournament = (idToDelete) => {
-		updateTournamentInfo(prevTournaments =>
-			prevTournaments.filter(tournament => tournament.id !== idToDelete)
-		);
+		deleteTournament(idToDelete);
 	};
 
 	const handleRenameTournament = (idToRename, newName) => {
 		console.log(`Renaming tournament ${idToRename} to ${newName}`); // Debugging line
-		updateTournamentInfo(prevTournaments =>
-			prevTournaments.map(tournament =>
-				tournament.id === idToRename ? { ...tournament, name: newName } : tournament
-			)
-		);
+		// Assuming updateTournamentInfo expects an ID and an object with updates
+		updateTournamentInfo(idToRename, { name: newName });
 	};
+	
 
 	const handleStartTournament = (index, tournament) => {
 		console.log("handleStartTournament: ", tournament);

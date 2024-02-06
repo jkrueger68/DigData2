@@ -9,8 +9,14 @@ import RollCall from "./RollCall";
 
 function SelectedHome() {
 	const [showModal, setShowModal] = useState(false);
-    const { tournamentInfo, updateTournamentInfo } = useContext(TournamentContext);
     const [currentTournament, setCurrentTournament] = useState(null);
+    const {
+        tournamentInfo,
+		updateTournamentInfo,
+		selectTournament,
+		getSelectedTournament
+        // Make sure to add any other methods you intend to use from the context here
+    } = useContext(TournamentContext);
 
     const navigate = useNavigate();
     const { state } = useLocation();
@@ -20,12 +26,8 @@ function SelectedHome() {
 	useEffect(() => {
 		console.log("tournamentInfo at start of SelectedHome useEffect: ", tournamentInfo);
         if (state?.type === "INDEX_TO_SELECTED") {
-            const foundTournament = tournamentInfo.find(t => t.id === state.tourId);
-            if (foundTournament) {
-                setCurrentTournament(foundTournament);
-            } else {
-                console.log("Tournament not found for id: ", state.tourId);
-            }
+			selectTournament(state.tourId);
+			setCurrentTournament(getSelectedTournament);
         }
     }, [state, updateTournamentInfo]);
 	
@@ -56,10 +58,18 @@ function SelectedHome() {
         ));
     };
 
+	const sortPlayersByNames = (players) => {
+        return players.slice().sort((a, b) => {
+            if (a.lastName.toLowerCase() < b.lastName.toLowerCase()) return -1;
+            if (a.lastName.toLowerCase() > b.lastName.toLowerCase()) return 1;
+            if (a.firstName.toLowerCase() < b.firstName.toLowerCase()) return -1;
+            if (a.firstName.toLowerCase() > b.firstName.toLowerCase()) return 1;
+            return 0;
+        });
+    }
+
 	const onManagePlayersClicked = () => {
 		if (currentTournament) {
-			updateTournamentInfo(currentTournament);
-
 			const TournamentIndexTransfer = {
 				type: "INDEX_TO_MANAGE_PLAYERS",
 				tourId: currentTournament.id,
@@ -174,7 +184,7 @@ function SelectedHome() {
 							</Modal.Header>
 							<Modal.Body>
 								<RollCall
-									playerList={currentTournament ? currentTournament.players : []}
+									playerList={currentTournament ? sortPlayersByNames(currentTournament.presentPlayers) : []}
 									onTogglePresent={togglePlayerPresent}
 								/>
 							</Modal.Body>
