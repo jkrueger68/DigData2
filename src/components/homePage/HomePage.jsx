@@ -33,6 +33,7 @@ function HomePage() {
 			name: newTournamentName,
 			dateCreated: new Date().toISOString(),
 			presentPlayers: [],
+			teams: [],
 		};
 		addTournament(newTournament);
 		setNewTournamentName("");

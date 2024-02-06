@@ -18,7 +18,6 @@ function ManagePlayers() {
     const [currentTournament, setCurrentTournament] = useState(null);
     const {
         tournamentInfo,
-        selectedTournamentId,
 		updateTournamentInfo,
 		selectTournament,
 		getSelectedTournament
@@ -46,23 +45,17 @@ function ManagePlayers() {
 	const isExactMatch = match?.pathname === location.pathname;
 
     useEffect(() => {
+        const currentTournament = getSelectedTournament();
         if (state?.type === "INDEX_TO_MANAGE_PLAYERS") {
             selectTournament(state.tourId);
-			setCurrentTournament(getSelectedTournament);
+			setCurrentTournament(currentTournament);
+        }
+        if (currentTournament) {
+            setSelectedPlayers(currentTournament.presentPlayers || []);
         }
     }, [state]);
     
     console.log("currentTournament after ManagePlayers useEffect: ", currentTournament);
-    console.log("selectedTournamentId in ManagePlayers: ", selectedTournamentId);
-    
-    // useEffect(() => {
-    //     updateTournamentInfo((prevState) => ({
-    //         ...prevState,
-    //         presentPlayers: selectedPlayers,
-    //     }));
-
-    //     console.log("tournamentInfo at ManagePlayers 2nd useEffect: ", tournamentInfo);
-    // }, [selectedPlayers]);
 
     function sortPlayersByNames(players) {
         return players.slice().sort((a, b) => {
@@ -73,45 +66,54 @@ function ManagePlayers() {
             return 0;
         });
     }
-
-	const handleEditInputChange = (e) => {
-		const { name, value } = e.target;
-        setEditPlayer((prevPlayer) => ({
-            ...prevPlayer,
-            [name]: value,
-        }));
-	};
-
-	const handleEditPlayer = (player) => {
-		setEditPlayerId(player.id);
-		setEditPlayer({
-			firstName: player.firstName,
-			lastName: player.lastName,
-			gender: player.gender,
-			skillLevel: player.skillLevel,
-		});
-		setShowEditPlayerModal(true);
-	};
-
-	const handleSaveEdit = () => {
-		const updatedSelectedPlayers = selectedPlayers.map(person => {
-            if (person.id === editPlayerId) {
-                return { ...person, ...editPlayer };
-            }
-            return person;
+// Function to handle the Edit button click for a player
+    const handleEditPlayer = (player) => {
+        setEditPlayerId(player.id); // Set the ID of the player being edited
+        setEditPlayer({ // Set the current data of the player in the edit form
+            firstName: player.firstName,
+            lastName: player.lastName,
+            gender: player.gender,
+            skillLevel: player.skillLevel,
         });
+        setShowEditPlayerModal(true); // Show the modal for editing
+    };    
 
-		const updatedPlayersArray = playersArr.map(person => {
-            if (person.id === editPlayerId) {
-                return { ...person, ...editPlayer };
-            }
-            return person;
-        });
+	// Function to handle changes in the form fields within the Edit Player modal
+    const handleEditInputChange = (event) => {
+        const { name, value } = event.target;
+        setEditPlayer(prev => ({ ...prev, [name]: value })); // Update the editPlayer state with new values
+    };
 
+	// Function to save the edited player information
+    const handleSaveEdit = () => {
+      
+    
+        // Update the players array with the edited player's new information
+        const updatedPlayers = playersArr.map(player =>
+            player.id === editPlayerId ? { ...player, ...editPlayer } : player
+        );
+    
+        // Update local state
+        setPlayersArr(updatedPlayers);
+    
+        // Update selectedPlayers if the edited player is in that list
+        const updatedSelectedPlayers = selectedPlayers.map(player =>
+            player.id === editPlayerId ? { ...player, ...editPlayer } : player
+        );
+    
         setSelectedPlayers(updatedSelectedPlayers);
-		setPlayersArr(updatedPlayersArray);
-        setShowEditPlayerModal(false);
-	};
+    
+        // Update global state in TournamentContext
+        updateTournamentInfo(prevState => {
+            const updatedTournamentInfo = { ...prevState };
+            updatedTournamentInfo.players = updatedTournamentInfo.players.map(player =>
+                player.id === editPlayerId ? { ...player, ...editPlayer } : player
+            );
+            return updatedTournamentInfo;
+        });
+    
+        setShowEditPlayerModal(false); // Close the modal after saving changes
+    };
 
     console.log("Current SelectedPlayer State: ", selectedPlayers);
     const handleSelectPlayer = (player) => {
@@ -155,7 +157,7 @@ function ManagePlayers() {
     };
 
     const handleBackClick = () => {
-        updateTournamentInfo(selectedTournamentId, { presentPlayers: selectedPlayers });
+        updateTournamentInfo(currentTournament.id, { presentPlayers: selectedPlayers });
         console.log("tournamentInfo after ManagePlayers handleBackClick: ", tournamentInfo);
 
         const TournamentIndexTransfer = {
@@ -317,7 +319,6 @@ function ManagePlayers() {
                             </Modal.Header>
                             <Modal.Body>
                                 <Form>
-                                <Form>
                                 {/* ... other form groups ... */}
                                 <Form.Group className="mb-3">
                                     <Form.Label>First Name:</Form.Label>
@@ -363,7 +364,6 @@ function ManagePlayers() {
                                         </Form.Select>
                                     </Form.Group>
                             </Form>
-                                </Form>
                             </Modal.Body>
                             <Modal.Footer>
                             <Button
@@ -404,12 +404,13 @@ function ManagePlayers() {
                                         <td>{player.skillLevel}</td>
                                         <td>{player.average}</td>
                                         <td>
-                                        <Button
-                                                variant="warning"
-                                                onClick={() => handleEditPlayer(player)}
-                                            >
-                                                Edit
-                                            </Button>
+                                         {/* Edit button - when clicked, opens the modal to edit this player */}
+                                            <Button
+                                                 variant="warning"
+                                                 onClick={() => handleEditPlayer(player)} // This function will set the player to be edited and show the modal
+                                             >
+                                             Edit
+                                             </Button>
                                         </td>
                                     </tr>
                                 ))}

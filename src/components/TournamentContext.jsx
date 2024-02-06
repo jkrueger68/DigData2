@@ -21,6 +21,14 @@ export const TournamentProvider = ({ children }) => {
     const updateTournamentInfo = (tournamentId, updates) => {
         setTournamentInfo(tournamentInfo.map(t => {
             if (t.id === tournamentId) {
+                // Check if the updates include player information and merge it
+                if (updates.players) {
+                    return { ...t, players: t.players.map(player => {
+                            const updatedPlayer = updates.players.find(p => p.id === player.id);
+                            return updatedPlayer ? { ...player, ...updatedPlayer } : player;
+                        })
+                    };
+                }
                 return { ...t, ...updates };
             }
             return t;
@@ -54,6 +62,8 @@ export const TournamentProvider = ({ children }) => {
             {children}
         </TournamentContext.Provider>
     );
+
+    
 };
 
 export default TournamentProvider;

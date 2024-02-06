@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import TournamentContext from '../TournamentContext';
+import { TournamentContext } from '../TournamentContext';
 import {
 	DndContext,
 	closestCenter,
@@ -34,28 +34,36 @@ function CreateMatch() {
 	const [hoveredTeamId, setHoveredTeamId] = useState(null);
 	const [presentPlayers, setPresentPlayers] = useState([]);
 	const [nonPresentPlayers, setNonPresentPlayers] = useState([]);
+	const [currentTournament, setCurrentTournament] = useState(null);
 	const [teamAmount, setTeamAmount] = useState({
 		count: 0,
 	});
-	const { tournamentInfo, setTournamentInfo } = useContext(TournamentContext);
+	const {
+		tournamentInfo,
+		updateTournamentInfo,
+		selectTournament,
+		getSelectedTournament
+	} = useContext(TournamentContext);
+	
 
 	const navigate = useNavigate();
 	const { state } = useLocation();
 
 	useEffect(() => {
-		if (state?.type === "INDEX_TO_CREATE_MATCH") {
-			setTournamentInfo({
-				name: state.name,
-				index: state.payload,
-				players: state.players,
-				teams: state.teams,
-			});
+		const currentTournament = getSelectedTournament();
 
-			const presentPlayers = state.players.filter(player => player.present === "yes");
-			const absentPlayers = state.players.filter(player => player.present !== "yes");
+		if (state?.type === "INDEX_TO_CREATE_MATCH") {
+            selectTournament(state.tourId);
+			setCurrentTournament(currentTournament);
+			
+			const presentPlayers = currentTournament.presentPlayers.filter(player => player.present === "yes");
+			const absentPlayers = currentTournament.presentPlayers.filter(player => player.present !== "yes");
+        
+			if (currentTournament) {
+				setPresentPlayers(presentPlayers);
+				setNonPresentPlayers(absentPlayers || []);
+			}
 	
-			setPresentPlayers(presentPlayers);
-			setNonPresentPlayers(absentPlayers);
 
 			if (state.teams) {
 				setTeamAmount({ count: state.teams.length, size: 0 });
@@ -65,7 +73,9 @@ function CreateMatch() {
 			console.log("selectedPlayers state: ", tournamentInfo);
 			console.log("Team Amount: ", teamAmount);
 		}
-	}, [state, setTournamentInfo]);
+	}, [state]);
+
+	console.log("currentTournament at end of CreateMatch useEffect: ", currentTournament);
 
 	useEffect(() => {
 		const updatedTeams = organizeTeamsWithPresentPlayers(presentPlayers);
@@ -118,7 +128,7 @@ function CreateMatch() {
 				setTeams(newTeams);
 			}
 
-			setTournamentInfo((prevState) => ({
+			setCurrentTournament((prevState) => ({
 				...prevState,
 				teams: newTeams,
 			}));
@@ -158,7 +168,7 @@ function CreateMatch() {
 		const organizedTeams = organizeTeams();
 		console.log("Organized Teams:", organizedTeams);
 		setTeams(organizedTeams);
-		setTournamentInfo((prevState) => ({
+		setCurrentTournament((prevState) => ({
 			...prevState,
 			teams: organizedTeams,
 		}));
@@ -167,17 +177,17 @@ function CreateMatch() {
 
 	const handleSubmitTeams = () => {
 
-		const TournamentIndexTransfer = {
-		  type: "INDEX_TO_SELECTED",
-		  payload: tournamentInfo.index,
-		  name: tournamentInfo.name,
-		  updatedPlayers: presentPlayers, 
-		  updatedTeams: teams, 
-		};
+		// const TournamentIndexTransfer = {
+		//   type: "INDEX_TO_SELECTED",
+		//   payload: tournamentInfo.index,
+		//   name: tournamentInfo.name,
+		//   updatedPlayers: presentPlayers, 
+		//   updatedTeams: teams, 
+		// };
 	  
-		navigate(`/selected/${tournamentInfo.name}`, {
-		  state: TournamentIndexTransfer,
-		});
+		// navigate(`/selected/${tournamentInfo.name}`, {
+		//   state: TournamentIndexTransfer,
+		// });
 	  };
 
 	const handleSwitchToPresent = (playerId) => {
@@ -236,7 +246,7 @@ function CreateMatch() {
 	};
 
 	const handleStartGames = () => {
-        navigate(`/selected/${tournamentInfo.name}/submitScores`, {
+        navigate(`/selected/${currentTournament.name}/submitScores`, {
             state: { teams: teams }});
 	};
 
@@ -247,7 +257,7 @@ function CreateMatch() {
 					<Card border="secondary" className="shadow">
 						<Card.Header>
 							<Card.Title className="mt-2">
-								Create the Teams for {tournamentInfo.name}
+								Create the Teams for {currentTournament.name}
 							</Card.Title>
 						</Card.Header>
 						<Card.Body>
