@@ -257,7 +257,7 @@ function CreateMatch() {
 					<Card border="secondary" className="shadow">
 						<Card.Header>
 							<Card.Title className="mt-2">
-								Create the Teams for {currentTournament.name}
+								Create the Teams for {tournamentInfo.name}
 							</Card.Title>
 						</Card.Header>
 						<Card.Body>
@@ -306,7 +306,7 @@ function CreateMatch() {
 										<tbody className="table-group-divider">
 											<tr>
 												<th scope="row d-flex" />
-												<td className="fw-bolder">Absent players are given:</td>
+												<td className="fw-bolder">Team Placement:</td>
 												<td>
 													<div className="row align-items-center">
 														<div className="col-2 flex-fill">
@@ -324,7 +324,7 @@ function CreateMatch() {
 															</div>
 														</div>
 														<div className="col-10 flex-fill">
-															<strong>No score:</strong>
+															<strong>Locked teams:</strong>
 															<br />
 															Best for competitive tournaments
 														</div>
@@ -345,7 +345,7 @@ function CreateMatch() {
 															</div>
 														</div>
 														<div className="col-10">
-															<strong>Lowest team score:</strong>
+															<strong>Unlocked teams:</strong>
 															<br />
 															Best for recreational tournaments
 														</div>
@@ -506,7 +506,6 @@ function CreateMatch() {
 										variant="secondary shadow mb-3"
 										onClick={handleSubmitTeams}
 									>
-										Submit Teams
 										Submit Teams
                            	 </Button>
                             	<Button
