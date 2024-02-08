@@ -45,17 +45,18 @@ function ManagePlayers() {
 	const isExactMatch = match?.pathname === location.pathname;
 
     useEffect(() => {
-        const currentTournament = getSelectedTournament();
+        const thisTournament  = getSelectedTournament();
         if (state?.type === "INDEX_TO_MANAGE_PLAYERS") {
             selectTournament(state.tourId);
-			setCurrentTournament(currentTournament);
         }
-        if (currentTournament) {
-            setSelectedPlayers(currentTournament.presentPlayers || []);
+        if (thisTournament) {
+            setCurrentTournament(thisTournament);
+            setSelectedPlayers(thisTournament.presentPlayers || []);
         }
-    }, [state]);
+    }, [getSelectedTournament, setCurrentTournament]);
     
     console.log("currentTournament after ManagePlayers useEffect: ", currentTournament);
+    const tournamentName = currentTournament?.name || tournamentInfo?.name || 'Loading tournament...';
 
     function sortPlayersByNames(players) {
         return players.slice().sort((a, b) => {
@@ -175,7 +176,7 @@ function ManagePlayers() {
                 <Card>
                     <Card.Header>
                         <Card.Title className="mt-2">
-                            Manage Players for {tournamentInfo.name}
+                            Manage Players for {tournamentName}
                         </Card.Title>
                     </Card.Header>
                     <Card.Body>

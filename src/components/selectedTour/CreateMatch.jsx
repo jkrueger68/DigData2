@@ -50,16 +50,16 @@ function CreateMatch() {
 	const { state } = useLocation();
 
 	useEffect(() => {
-		const currentTournament = getSelectedTournament();
+		const thisTournament = getSelectedTournament();
 
 		if (state?.type === "INDEX_TO_CREATE_MATCH") {
             selectTournament(state.tourId);
-			setCurrentTournament(currentTournament);
 			
-			const presentPlayers = currentTournament.presentPlayers.filter(player => player.present === "yes");
-			const absentPlayers = currentTournament.presentPlayers.filter(player => player.present !== "yes");
-        
-			if (currentTournament) {
+			const presentPlayers = thisTournament.presentPlayers.filter(player => player.present === "yes");
+			const absentPlayers = thisTournament.presentPlayers.filter(player => player.present !== "yes");
+			
+			if (thisTournament) {
+				setCurrentTournament(thisTournament);
 				setPresentPlayers(presentPlayers);
 				setNonPresentPlayers(absentPlayers || []);
 			}
@@ -73,16 +73,23 @@ function CreateMatch() {
 			console.log("selectedPlayers state: ", tournamentInfo);
 			console.log("Team Amount: ", teamAmount);
 		}
-	}, [state]);
+	}, [getSelectedTournament, setCurrentTournament]);
 
 	console.log("currentTournament at end of CreateMatch useEffect: ", currentTournament);
+	const tournamentName = currentTournament?.name || tournamentInfo?.name || 'Loading tournament...';
 
 	useEffect(() => {
-		const updatedTeams = organizeTeamsWithPresentPlayers(presentPlayers);
+		const updatedTeams = organizeTeams(presentPlayers, teamAmount.count);
 		setTeams(updatedTeams);
+
+		setCurrentTournament(prevState => ({
+			...prevState,
+			teams: updatedTeams,
+		}));
 
 		generateTeams();
 	}, [presentPlayers, teamAmount.count]);
+
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -165,15 +172,20 @@ function CreateMatch() {
 	};
 
 	const generateTeams = () => {
-		const organizedTeams = organizeTeams();
-		console.log("Organized Teams:", organizedTeams);
-		setTeams(organizedTeams);
-		setCurrentTournament((prevState) => ({
-			...prevState,
-			teams: organizedTeams,
-		}));
-		setShowTeams(true);
+		if (presentPlayers && presentPlayers.length > 0 && teamAmount.count > 0) {
+			const organizedTeams = organizeTeams(presentPlayers, teamAmount.count);
+			setTeams(organizedTeams);
+	
+			setCurrentTournament(prevState => ({
+				...prevState,
+				teams: organizedTeams,
+			}));
+			setShowTeams(true);
+		} else {
+			console.log("Present players or team count is undefined or invalid");
+		}
 	};
+	
 
 	const handleSubmitTeams = () => {
 
@@ -188,62 +200,58 @@ function CreateMatch() {
 		// navigate(`/selected/${tournamentInfo.name}`, {
 		//   state: TournamentIndexTransfer,
 		// });
-	  };
+	};
 
 	const handleSwitchToPresent = (playerId) => {
-		const playerIndex = nonPresentPlayers.findIndex(
-			(player) => player.id === playerId
-		);
-		if (playerIndex === -1) {
-			console.log("Player not found in nonPresentPlayers");
+		let playerToUpdate = presentPlayers.find(player => player.id === playerId) 
+							|| nonPresentPlayers.find(player => player.id === playerId);
+	
+		if (!playerToUpdate) {
+			console.error("Player not found");
 			return;
 		}
+	
+		const isPresent = playerToUpdate.present === "yes";
+		playerToUpdate.present = isPresent ? "no" : "yes";
 
-		const player = { ...nonPresentPlayers[playerIndex], present: "yes" };
-
-		const updatedNonPresentPlayers = nonPresentPlayers.filter(
-			(_, index) => index !== playerIndex
-		);
-		setNonPresentPlayers(updatedNonPresentPlayers);
-
-		const updatedPresentPlayers = [...presentPlayers, player];
-		setPresentPlayers(updatedPresentPlayers);
-	};
-
-	const organizeTeamsWithPresentPlayers = (presentPlayers) => {
-		const teamSize = Math.floor(presentPlayers.length / teamAmount.count);
-		let remainder = presentPlayers.length % teamAmount.count;
-		let teams = [];
-
-		for (let i = 0; i < teamAmount.count; i++) {
-			const endSlice =
-				i < remainder ? (i + 1) * teamSize + 1 : (i + 1) * teamSize;
-			teams.push(presentPlayers.slice(i * teamSize, endSlice));
+		if (isPresent) {
+			setPresentPlayers(presentPlayers.filter(player => player.id !== playerId));
+			setNonPresentPlayers([...nonPresentPlayers, playerToUpdate]);
+		} else {
+			setNonPresentPlayers(nonPresentPlayers.filter(player => player.id !== playerId));
+			setPresentPlayers([...presentPlayers, playerToUpdate]);
 		}
 
-		return teams;
+		setCurrentTournament(prevState => {
+			const updatedPresentPlayers = prevState.presentPlayers.map(player => 
+				player.id === playerId ? { ...player, present: playerToUpdate.present } : player
+			);
+	
+			return { ...prevState, presentPlayers: updatedPresentPlayers };
+		});
 	};
+	
 
-	const organizeTeams = () => {
-		const totalPlayers = presentPlayers.length;
-		const baseTeamSize = Math.floor(totalPlayers / teamAmount.count);
-		let remainder = totalPlayers % teamAmount.count;
-		let teams = [];
-
+	const organizeTeams = (players, teamCount) => {
+		const totalPlayers = players.length;
+		const baseTeamSize = Math.floor(totalPlayers / teamCount);
+		let remainder = totalPlayers % teamCount;
+		let organizedTeams = [];
+	
 		let playerIndex = 0;
-
-		for (let i = 0; i < teamAmount.count; i++) {
+		for (let i = 0; i < teamCount; i++) {
 			let teamSize = baseTeamSize + (remainder > 0 ? 1 : 0);
 			remainder--;
-
-			let team = presentPlayers.slice(playerIndex, playerIndex + teamSize);
+	
+			let team = players.slice(playerIndex, playerIndex + teamSize);
 			playerIndex += teamSize;
-
-			teams.push(team);
+	
+			organizedTeams.push(team);
 		}
-
-		return teams;
+	
+		return organizedTeams;
 	};
+	
 
 	const handleStartGames = () => {
         navigate(`/selected/${currentTournament.name}/submitScores`, {
@@ -257,7 +265,7 @@ function CreateMatch() {
 					<Card border="secondary" className="shadow">
 						<Card.Header>
 							<Card.Title className="mt-2">
-								Create the Teams for {tournamentInfo.name}
+								Create the Teams for {tournamentName}
 							</Card.Title>
 						</Card.Header>
 						<Card.Body>
